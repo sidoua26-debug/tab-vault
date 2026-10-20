@@ -1,0 +1,22 @@
+  AAA   16.10:1  light-text               on light-bg             
+  AAA   15.27:1  light-text               on light-surface        
+  AA     6.05:1  light-text-muted         on light-bg             
+  AA     5.74:1  light-text-muted         on light-surface        
+  AA     4.51:1  light-on-accent          on light-accent         
+  AA     4.51:1  light-accent             on light-bg             
+  AA     4.77:1  light-danger             on light-bg             
+  AA     5.95:1  light-success            on light-bg             
+  AA     4.65:1  light-warning            on light-bg             
+  PASS   4.65:1  light-border-input       on light-bg             ui
+  AAA   13.36:1  dark-text                on dark-bg              
+  AAA   11.91:1  dark-text                on dark-surface         
+  AA     6.10:1  dark-text-muted          on dark-bg              
+  AA     5.43:1  dark-text-muted          on dark-surface         
+  AAA    7.64:1  dark-on-accent           on dark-accent          
+  AAA    7.64:1  dark-accent              on dark-bg              
+  AA     6.74:1  dark-danger              on dark-bg              
+  AAA    8.22:1  dark-success             on dark-bg              
+  AAA   11.48:1  dark-warning             on dark-bg              
+  PASS   6.10:1  dark-border-input        on dark-bg              ui
+
+  20 pairs, 0 failing AA

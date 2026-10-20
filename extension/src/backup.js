@@ -37,6 +37,7 @@ export function buildBackupPayload(sanitizedGroups) {
   const totalTabs = sanitizedGroups.reduce((acc, g) => acc + (g.tabs ? g.tabs.length : 0), 0);
   return {
     version: 1,
+    schemaVersion: 1,
     appName: 'Tab Vault',
     exportedAt: new Date().toISOString(),
     timestamp: Date.now(),

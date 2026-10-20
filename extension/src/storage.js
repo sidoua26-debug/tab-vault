@@ -38,6 +38,35 @@ export async function withGroupIndexLock(fn) {
 }
 
 /**
+ * Deep semantic equality comparison that is resilient to object key ordering differences
+ * and undefined properties stripped by storage engines.
+ */
+export function areObjectsEquivalent(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return a === b;
+  if (typeof a !== 'object' || typeof b !== 'object') return a === b;
+
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!areObjectsEquivalent(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  if (Array.isArray(b)) return false;
+
+  const aKeys = Object.keys(a).filter(k => a[k] !== undefined);
+  const bKeys = Object.keys(b).filter(k => b[k] !== undefined);
+  if (aKeys.length !== bKeys.length) return false;
+
+  for (const key of aKeys) {
+    if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
+    if (!areObjectsEquivalent(a[key], b[key])) return false;
+  }
+  return true;
+}
+
+/**
  * Format group ID with grp_ prefix
  */
 export function formatGroupKey(id) {
@@ -61,9 +90,7 @@ export async function writeNewVerifySwap(storageArea, stagingKey, finalKey, data
     throw new Error(`Atomic write verification failed: staging key ${stagingKey} not found`);
   }
 
-  const expectedJson = JSON.stringify(data);
-  const actualJson = JSON.stringify(stagedData);
-  if (expectedJson !== actualJson) {
+  if (!areObjectsEquivalent(data, stagedData)) {
     await storageArea.remove([stagingKey]);
     throw new Error(`Atomic write verification failed: data mismatch for ${stagingKey}`);
   }

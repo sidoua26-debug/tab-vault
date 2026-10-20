@@ -20,15 +20,15 @@ This document maintains the chronological, cumulative audit history of the Tab V
 
 ---
 
-## Project Status Scorecard (Reflects Latest Audit: Audit 06 / 2026-10-20)
+## Project Status Scorecard (Reflects Latest Audit: Audit 07 / 2026-10-20)
 
 | Milestone / Gate | Score / Count | Status | Notes |
 | :--- | :--- | :--- | :--- |
 | **Milestone 1 Scope** | Core Storage & Disaster Recovery | **Complete** | Storage layer, 3-file rotated auto-backup, wipe detection, 20k tabs fallback. |
-| **Milestone 1.5 Scope** | Concurrency, Filters & Hardening | **Automated PASS** | Deadlock-free mutex, encoded URL length check, 2-way baseline, collapse filter. |
-| **Automated Tests** | 22 Passed / 0 Failed | **PASS** | Run via `timeout 120 node --test tests/*.test.js` ([log](file:///replica/audit/logs/05-tests.txt)). |
-| **WCAG Contrast** | 20 Pairs / 0 Failing AA | **PASS** | Light & dark theme tokens verified with `contrast.py` ([log](file:///replica/audit/logs/05-contrast.txt)). |
-| **Parity Score** | 20.5 / 100 | **In Progress** | 0 of 13 must-haves marked fully complete in `features.csv` because all 10 implemented items are honestly classified as `partial` pending manual verification in real Chrome ([log](file:///replica/audit/logs/05-parity.txt)). |
+| **Milestone 1.5 Scope** | Concurrency, Filters & Hardening | **Automated PASS** | Deadlock-free mutex, encoded URL length check, 2-way baseline, collapse filter, key-order resilient atomic swap. |
+| **Automated Tests** | 27 Passed / 0 Failed | **PASS** | Run via `timeout 120 node --test tests/*.test.js` ([log](file:///replica/audit/logs/07-tests.txt)). |
+| **WCAG Contrast** | 20 Pairs / 0 Failing AA | **PASS** | Light & dark theme tokens verified with `contrast.py` ([log](file:///replica/audit/logs/07-contrast.txt)). |
+| **Parity Score** | 20.5 / 100 | **In Progress** | 0 of 13 must-haves marked fully complete in `features.csv` because all 10 implemented items are honestly classified as `partial` pending manual verification in real Chrome ([log](file:///replica/audit/logs/07-parity.txt)). |
 | **Milestone 2 Scope** | Search, Import/Export, Context Menus | **Not Started** | Strictly blocked until live manual Chrome verification is complete. |
 
 ---
@@ -175,4 +175,31 @@ This document maintains the chronological, cumulative audit history of the Tab V
 - **Next Recommended Actions**:
   - User executes the 6-step safe test plan in Chrome with a disposable profile.
   - Upon user confirmation of results, update `replica/features.csv` and begin Milestone 2.
+
+---
+
+### [2026-10-20] Audit 07 — Critical Bug Fix: Key-Order Resilient Atomic Writes & Backup Restoration Hardening
+- **Task**: Isolate and repair critical defect where backup restoration was not working and dashboard rendered quiet empty state rather than disaster recovery alarm after wipe; trace restoration flow, inspect atomic write verification, inspect backup schema compatibility, fix root causes with regression tests, and maintain cumulative audit history.
+- **Verdict**: `PASS WITH WARNINGS` (Automated suite expanded to 27 tests, all passing; warning: real Chrome manual re-verification required for the fixed restoration flow).
+- **Audit File**: [`replica/audit/07-backup-restoration-fix.md`](file:///replica/audit/07-backup-restoration-fix.md)
+- **Root Cause Identified**:
+  1. `writeNewVerifySwap` in `storage.js` previously compared `JSON.stringify(data) !== JSON.stringify(stagedData)`. In real Chrome, Chromium's C++ storage layer (`base::Value::Dict`) serializes and returns dictionary keys in sorted alphabetical order. Because JavaScript's `JSON.stringify` serializes keys in property creation order, this string comparison evaluated to `true`, causing `writeNewVerifySwap` to delete the staging key and throw an uncaught `Atomic write verification failed: data mismatch` error whenever tab groups were collapsed or restored.
+  2. Because `saveGroup` aborted during collapse, `_updateSyncMetadata` was never executed, leaving `chrome.storage.sync` with `hasSavedTabs` uninitialized/false.
+  3. Consequently, upon `chrome.storage.local.clear()`, wipe detection evaluated `hasSyncTabs === false` and lacked Scenario 4 handling for signed-out profiles, falling through to `quiet_empty` ("No Tabs Stashed").
+  4. When the user clicked "Select Backup File to Restore", `saveGroup` threw the same `Atomic write verification failed` error, leaving the dashboard empty.
+- **Fixes Applied**:
+  - `extension/src/storage.js`: Implemented `areObjectsEquivalent(a, b)` for deep semantic equality comparison resilient to key reordering and omitted `undefined` properties; replaced brittle `JSON.stringify` check in `writeNewVerifySwap`.
+  - `extension/src/backup.js`: Added `schemaVersion: 1` alongside `version: 1` in `buildBackupPayload` for comprehensive schema compatibility.
+  - `extension/tab-vault.js`: Hardened restore file handler with explicit JSON syntax error reporting, schema normalization (supporting both `{ groups: [...] }` and `[...]`), group/tab ID sanitization, baseline adjustment via `adjustBaseline`, and immediate UI reload.
+  - `extension/src/wipe-detection.js`: Implemented Scenario 4 ("Wipe with Signed-Out Chrome" / uninitialized sync with backup in Downloads) to trigger contextual recovery alarm and recommend detected backup files.
+- **Quality & Health Checks Run**:
+  - **Automated Tests**: `timeout 120 node --test tests/*.test.js` $\rightarrow$ 27 passed, 0 failed, duration 515ms ([`07-tests.txt`](file:///replica/audit/logs/07-tests.txt)). Added 5 new regression tests.
+  - **Feature Parity**: `python3 parity.py replica/features.csv` $\rightarrow$ 20.5 / 100 ([`07-parity.txt`](file:///replica/audit/logs/07-parity.txt)).
+  - **WCAG Contrast**: `python3 contrast.py replica/design/tokens.json` $\rightarrow$ 20 pairs checked, 0 failing AA ([`07-contrast.txt`](file:///replica/audit/logs/07-contrast.txt)).
+- **Remaining Issues & Blockers**:
+  - User verification in real Chrome required to confirm end-to-end collapse, wipe, and restore.
+  - Milestone 2 remains blocked until Chrome manual verification succeeds.
+- **Next Recommended Actions**:
+  - Reload unpacked extension in Chrome and rerun manual verification steps.
+  - Upon user confirmation, update `replica/features.csv` and begin Milestone 2.
 

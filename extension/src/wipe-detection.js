@@ -112,6 +112,22 @@ export function evaluateEmptyState({
     };
   }
 
+  // Scenario 4: Wipe with signed-out Chrome (sync empty/unavailable, but backup exists in Downloads)
+  const isExplicitEmpty = Boolean(syncState && syncState.hasSavedTabs === false);
+  if (!deliberateClear && !isExplicitEmpty && !hasSyncTabs && recommendedBackup && !isFreshInstall) {
+    return {
+      isEmpty: true,
+      isAlarm: true,
+      scenario: 'wipe_signed_out_with_backup',
+      title: 'Disaster Recovery: Backup Detected',
+      promptType: 'contextual_recovery_prompt',
+      severity: 'warning',
+      recommendedBackup,
+      showRestorePicker: true,
+      message: `Your local tabs appear to have been wiped by a browser reset. We detected your recent backup "${recommendedBackup.filename}".`
+    };
+  }
+
   // Quiet empty state (sync flag false / deliberate clear / restored all)
   return {
     isEmpty: true,

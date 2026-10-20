@@ -187,3 +187,34 @@ test('Real Flow: stash -> local.clear() without backup file (alarm)', async () =
   assert.equal(result.showRestorePicker, true, 'Always offer file picker');
   assert.match(result.message, /No automatic backup was found in Downloads, but you can select an existing backup/);
 });
+
+test('Real Flow: Scenario 4 - signed-out Chrome / uninitialized sync with backup in Downloads triggers recovery alarm', () => {
+  // Scenario: Chrome is signed out or sync unavailable/uninitialized, local storage empty, backup present in Downloads
+  const downloadItems = [
+    {
+      id: 1,
+      filename: '/home/user/Downloads/tab-vault-backup-1.json',
+      endTime: '2026-10-20T11:00:00Z',
+      exists: true,
+      fileSize: 48000,
+      state: 'complete'
+    }
+  ];
+
+  const result = evaluateEmptyState({
+    localTabCount: 0,
+    syncState: {}, // Empty sync (signed out)
+    onInstalledReason: null,
+    downloadItems
+  });
+
+  assert.equal(result.isEmpty, true);
+  assert.equal(result.isAlarm, true, 'Backup detected without sync flag must trigger recovery alarm');
+  assert.equal(result.scenario, 'wipe_signed_out_with_backup');
+  assert.equal(result.severity, 'warning');
+  assert.ok(result.recommendedBackup);
+  assert.equal(result.recommendedBackup.filename, 'tab-vault-backup-1.json');
+  assert.equal(result.showRestorePicker, true);
+  assert.match(result.message, /tab-vault-backup-1\.json/);
+});
+

@@ -7,6 +7,7 @@ import {
   rebuildIndexFromKeys,
   purgeExpiredTrash,
   adjustBaseline,
+  areObjectsEquivalent,
   GROUP_INDEX_KEY,
   TRASH_BIN_KEY,
   BACKUP_STATE_KEY
@@ -210,4 +211,175 @@ test('Storage Layer: regression - concurrent restore and save operations do not 
 
   assert.equal(results[0].tabCountRestored, 1);
   assert.equal((await storage.getAllGroups()).length, 2);
+});
+
+test('Storage Layer: areObjectsEquivalent deep structural equality checks', () => {
+  // Reordered keys
+  assert.equal(
+    areObjectsEquivalent(
+      { z: 1, a: 2, m: { nestedZ: 10, nestedA: 20 } },
+      { a: 2, m: { nestedA: 20, nestedZ: 10 }, z: 1 }
+    ),
+    true
+  );
+
+  // Array element order must be strictly preserved
+  assert.equal(
+    areObjectsEquivalent([1, 2, 3], [1, 3, 2]),
+    false
+  );
+
+  // Nested tab arrays with reordered object properties inside array
+  const groupA = {
+    id: 'grp_1',
+    title: 'Alpha',
+    tabs: [{ url: 'https://a.com', title: 'A', id: 't1' }]
+  };
+  const groupB = {
+    tabs: [{ id: 't1', title: 'A', url: 'https://a.com' }],
+    title: 'Alpha',
+    id: 'grp_1'
+  };
+  assert.equal(areObjectsEquivalent(groupA, groupB), true);
+
+  // Mismatched data / corruption
+  const groupCorrupted = {
+    tabs: [{ id: 't1', title: 'Tampered Title', url: 'https://a.com' }],
+    title: 'Alpha',
+    id: 'grp_1'
+  };
+  assert.equal(areObjectsEquivalent(groupA, groupCorrupted), false);
+});
+
+test('Storage Layer: regression - writeNewVerifySwap succeeds when storage area reorders object keys', async () => {
+  // Simulates Chromium C++ base::Value::Dict which stores dictionary keys in alphabetical order
+  const sortingStorage = {
+    _store: {},
+    async set(items) {
+      for (const [k, v] of Object.entries(items)) {
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          const sorted = {};
+          for (const key of Object.keys(v).sort()) {
+            sorted[key] = v[key];
+          }
+          this._store[k] = sorted;
+        } else {
+          this._store[k] = v;
+        }
+      }
+    },
+    async get(keys) {
+      const res = {};
+      const list = Array.isArray(keys) ? keys : [keys];
+      for (const k of list) {
+        if (k in this._store) res[k] = this._store[k];
+      }
+      return res;
+    },
+    async remove(keys) {
+      for (const k of keys) delete this._store[k];
+    }
+  };
+
+  const stagingKey = 'staging_grp_sorted_test';
+  const finalKey = 'grp_sorted_test';
+  // Non-alphabetical property order
+  const testData = {
+    zIndex: 99,
+    title: 'Sorting Regression',
+    id: 'sorted_test',
+    tabs: [{ url: 'https://example.com', title: 'Example', id: 't1' }],
+    createdAt: 12345
+  };
+
+  const result = await writeNewVerifySwap(sortingStorage, stagingKey, finalKey, testData, (idx) => ['sorted_test', ...idx]);
+  assert.equal(result.id, 'sorted_test');
+  assert.deepEqual(sortingStorage._store[GROUP_INDEX_KEY], ['sorted_test']);
+  assert.ok(sortingStorage._store[finalKey], 'Committed group must exist');
+  assert.equal(sortingStorage._store[stagingKey], undefined, 'Staging key must be removed');
+});
+
+test('Storage Layer: backup restoration workflow restores groups and updates group_index', async () => {
+  const local = new MockStorageArea();
+  const sync = new MockStorageArea();
+  const storage = new TabVaultStorage(local, sync);
+
+  // Backup payload with schemaVersion, metadata, and multiple groups
+  const backupPayload = {
+    version: 1,
+    schemaVersion: 1,
+    appName: 'Tab Vault',
+    exportedAt: new Date().toISOString(),
+    tabCount: 3,
+    groupCount: 2,
+    groups: [
+      {
+        id: '1001',
+        title: 'Restored Group 1',
+        createdAt: 1000,
+        tabs: [
+          { id: 'tab_1', title: 'Site 1', url: 'https://site1.com' },
+          { id: 'tab_2', title: 'Site 2', url: 'https://site2.com' }
+        ]
+      },
+      {
+        id: '1002',
+        title: 'Restored Group 2',
+        createdAt: 2000,
+        tabs: [
+          { id: 'tab_3', title: 'Site 3', url: 'https://site3.com' }
+        ]
+      }
+    ]
+  };
+
+  // Perform restore workflow
+  for (const group of backupPayload.groups) {
+    await storage.saveGroup(group);
+  }
+
+  // Verify group_index contains both groups
+  const index = await storage.getGroupIndex();
+  assert.equal(index.length, 2);
+  assert.ok(index.includes('1001'));
+  assert.ok(index.includes('1002'));
+
+  // Verify individual grp_* keys exist in local storage
+  const rawData = local.rawDump();
+  assert.ok(rawData['grp_1001'], 'grp_1001 must exist in storage');
+  assert.ok(rawData['grp_1002'], 'grp_1002 must exist in storage');
+
+  // Verify getAllGroups returns all restored items
+  const restoredGroups = await storage.getAllGroups();
+  assert.equal(restoredGroups.length, 2);
+  assert.equal(await storage.getTotalTabCount(), 3);
+
+  // Verify sync flag is updated to hasSavedTabs: true
+  const syncData = await sync.get(['hasSavedTabs', 'lastKnownTabCount']);
+  assert.equal(syncData.hasSavedTabs, true);
+  assert.equal(syncData.lastKnownTabCount, 3);
+});
+
+test('Storage Layer: malformed backup data throws error and preserves existing data', async () => {
+  const local = new MockStorageArea();
+  const storage = new TabVaultStorage(local);
+
+  await storage.saveGroup({
+    id: 'grp_existing',
+    title: 'Existing Intact Group',
+    tabs: [{ id: 't_ex', title: 'Existing', url: 'https://existing.com' }]
+  });
+
+  // Attempting to save invalid group without id must throw
+  await assert.rejects(
+    async () => {
+      await storage.saveGroup(null);
+    },
+    /Group must have a valid id/
+  );
+
+  // Confirm existing data is untouched
+  const groups = await storage.getAllGroups();
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].title, 'Existing Intact Group');
 });

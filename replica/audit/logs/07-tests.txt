@@ -1,0 +1,35 @@
+✔ Backup Module: slot calculation and filename rotation (4.652212ms)
+✔ Backup Module: sanitizeGroupsForBackup excludes incognito tabs (0.659335ms)
+✔ Backup Module: Empty Guard aborts when tabs count is 0 (1.262504ms)
+✔ Backup Module: Shrink Guard blocks backup if tabs drop > 50% (5.024559ms)
+✔ Backup Module: In-app removals lower baseline, undo raises baseline, and restore a 100-tab group allows backup to succeed (11.956921ms)
+✔ Backup Module: Encoded URL length check triggers offscreen Blob URL creation (319.991185ms)
+✔ Backup Module: backup_state updated ONLY after download complete; on failure state kept and lastError recorded (1.23311ms)
+✔ Backup Module: regression - encoded URL length measurement accounts for URI encoding expansion (35.589231ms)
+✔ Collapse Filter: skips pinned tabs and non-http(s) pages (1.074452ms)
+✔ Storage Layer: formatGroupKey (3.454259ms)
+✔ Storage Layer: writeNewVerifySwap atomic workflow (1.54858ms)
+✔ Storage Layer: writeNewVerifySwap aborts on corruption during staging (0.576369ms)
+✔ Storage Layer: parallel saveGroup calls serialized without race conditions (13.148774ms)
+✔ Storage Layer: rebuildIndexFromKeys reconstructs group_index from grp_* keys (0.654125ms)
+✔ Storage Layer: 30-day trash purge cleans expired items on startup (0.413003ms)
+✔ Storage Layer: soft-delete, undo, and restore from trash bin (3.292606ms)
+✔ Storage Layer: regression - concurrent restore and save operations do not deadlock (3.749611ms)
+✔ Storage Layer: areObjectsEquivalent deep structural equality checks (0.353592ms)
+✔ Storage Layer: regression - writeNewVerifySwap succeeds when storage area reorders object keys (0.720229ms)
+✔ Storage Layer: backup restoration workflow restores groups and updates group_index (1.73035ms)
+✔ Storage Layer: malformed backup data throws error and preserves existing data (1.06236ms)
+✔ Wipe Detection: findRecommendedBackup selection logic (4.905692ms)
+✔ Real Flow: stash -> restore all -> empty (no alarm) (6.865337ms)
+✔ Real Flow: stash -> delete all -> empty (no alarm) (1.396966ms)
+✔ Real Flow: stash -> local.clear() with backup file (alarm) (1.346251ms)
+✔ Real Flow: stash -> local.clear() without backup file (alarm) (1.856066ms)
+✔ Real Flow: Scenario 4 - signed-out Chrome / uninitialized sync with backup in Downloads triggers recovery alarm (2.547591ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 515.311852

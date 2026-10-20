@@ -133,17 +133,58 @@ function setupEventListeners() {
     if (!file) return;
     try {
       const text = await file.text();
-      const payload = JSON.parse(text);
-      if (!payload.groups || !Array.isArray(payload.groups)) {
-        throw new Error('Invalid Tab Vault backup format');
+      let payload;
+      try {
+        payload = JSON.parse(text);
+      } catch (parseErr) {
+        throw new Error(`Invalid JSON format: ${parseErr.message}`);
       }
 
-      for (const group of payload.groups) {
-        await storage.saveGroup(group);
+      let groupsToRestore = null;
+      if (Array.isArray(payload)) {
+        groupsToRestore = payload;
+      } else if (payload && Array.isArray(payload.groups)) {
+        groupsToRestore = payload.groups;
       }
-      showToast(`Successfully restored ${payload.groups.length} groups (${payload.tabCount || ''} tabs)`);
+
+      if (!groupsToRestore || groupsToRestore.length === 0) {
+        throw new Error('Invalid Tab Vault backup format: no tab groups found in file');
+      }
+
+      let totalRestoredTabs = 0;
+      for (const group of groupsToRestore) {
+        const cleanTabs = (Array.isArray(group.tabs) ? group.tabs : []).map((t, idx) => ({
+          id: t.id ? String(t.id) : `tab_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 7)}`,
+          url: t.url || '',
+          title: t.title || t.url || 'Untitled Tab',
+          favIconUrl: t.favIconUrl || '',
+          pinned: Boolean(t.pinned),
+          incognito: Boolean(t.incognito),
+          createdAt: t.createdAt || Date.now()
+        }));
+
+        const cleanGroup = {
+          ...group,
+          id: group.id ? String(group.id) : `grp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          title: group.title || 'Restored Group',
+          createdAt: group.createdAt || Date.now(),
+          isLocked: Boolean(group.isLocked),
+          isStarred: Boolean(group.isStarred),
+          tabs: cleanTabs
+        };
+
+        await storage.saveGroup(cleanGroup);
+        totalRestoredTabs += cleanTabs.length;
+      }
+
+      // Raise baseline so shrink guard accounts for restored tabs
+      await adjustBaseline(chrome.storage.local, totalRestoredTabs);
+
+      showToast(`Successfully restored ${groupsToRestore.length} groups (${totalRestoredTabs} tabs)`);
       await renderDashboard();
     } catch (err) {
+      console.error('[Tab Vault] Backup restore failed:', err);
+      showToast(`Restore error: ${err.message}`);
       alert(`Could not restore file: ${err.message}`);
     } finally {
       fileInput.value = '';
