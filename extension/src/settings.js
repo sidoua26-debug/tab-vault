@@ -9,7 +9,8 @@ export const DEFAULT_SETTINGS = {
   openOnStartup: false,
   deduplicateOnCapture: true,
   lazyRestore: true,
-  captureIncognito: false
+  captureIncognito: false,
+  theme: 'light' // 'light' | 'dark'
 };
 
 const SETTINGS_KEY = 'vault_settings';
@@ -45,4 +46,24 @@ export async function saveSettings(storageArea = chrome.storage.local, partialSe
   };
   await storageArea.set({ [SETTINGS_KEY]: updated });
   return updated;
+}
+
+/**
+ * One-time migration: reads old localStorage 'tab_vault_theme' into vault_settings if not already set
+ * @param {Object} storageArea - chrome.storage.local
+ * @returns {Promise<string>} Active theme ('light' | 'dark')
+ */
+export async function migrateThemeSettings(storageArea = chrome.storage.local) {
+  const current = await getSettings(storageArea);
+  if (typeof localStorage !== 'undefined') {
+    const legacyTheme = localStorage.getItem('tab_vault_theme');
+    if (legacyTheme && !current.themeSetExplicitly) {
+      const updated = await saveSettings(storageArea, {
+        theme: legacyTheme,
+        themeSetExplicitly: true
+      });
+      return updated.theme;
+    }
+  }
+  return current.theme || 'light';
 }

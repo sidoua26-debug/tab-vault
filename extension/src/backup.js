@@ -6,6 +6,7 @@
  */
 
 import { BACKUP_STATE_KEY } from './storage.js';
+import { applyBaselineDelta, syncBaselineFromGroups } from './baseline.js';
 
 export const DATA_URL_MAX_LENGTH = 2 * 1024 * 1024; // 2 million characters limit on encoded URL
 export const BACKUP_FILE_PREFIX = 'tab-vault-backup-';
@@ -69,18 +70,7 @@ export function getBackupFilename(slot) {
  */
 export async function adjustBaselineOnDelete(storageArea, deletedTabCount) {
   if (!storageArea || !deletedTabCount || deletedTabCount <= 0) return;
-  const res = await storageArea.get([BACKUP_STATE_KEY]);
-  const state = res[BACKUP_STATE_KEY] || {};
-  const currentBaseline = state.baselineTabCount ?? state.lastKnownTabCount ?? 0;
-  const newBaseline = Math.max(0, currentBaseline - deletedTabCount);
-
-  await storageArea.set({
-    [BACKUP_STATE_KEY]: {
-      ...state,
-      baselineTabCount: newBaseline
-    }
-  });
-  return newBaseline;
+  return await applyBaselineDelta(storageArea, -deletedTabCount);
 }
 
 /**
@@ -88,18 +78,7 @@ export async function adjustBaselineOnDelete(storageArea, deletedTabCount) {
  */
 export async function adjustBaselineOnUndo(storageArea, restoredTabCount) {
   if (!storageArea || !restoredTabCount || restoredTabCount <= 0) return;
-  const res = await storageArea.get([BACKUP_STATE_KEY]);
-  const state = res[BACKUP_STATE_KEY] || {};
-  const currentBaseline = state.baselineTabCount ?? state.lastKnownTabCount ?? 0;
-  const newBaseline = currentBaseline + restoredTabCount;
-
-  await storageArea.set({
-    [BACKUP_STATE_KEY]: {
-      ...state,
-      baselineTabCount: newBaseline
-    }
-  });
-  return newBaseline;
+  return await applyBaselineDelta(storageArea, restoredTabCount);
 }
 
 /**

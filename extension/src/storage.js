@@ -9,6 +9,9 @@ export const TRASH_BIN_KEY = 'trash_bin';
 export const SETTINGS_KEY = 'settings';
 export const BACKUP_STATE_KEY = 'backup_state';
 
+import { syncBaselineFromGroups, applyBaselineDelta, getBaseline } from './baseline.js';
+export { syncBaselineFromGroups, applyBaselineDelta, getBaseline };
+
 // In-memory fallback lock for environments without navigator.locks
 class SimpleMutex {
   constructor() {
@@ -142,24 +145,42 @@ export async function rebuildIndexFromKeys(storageArea) {
 }
 
 /**
- * Adjust shrink-guard baseline tab count
- * delta < 0 lowers baseline (on deletion or tab restoration)
- * delta > 0 raises baseline (on undo)
+ * Reconcile orphan keys: scans chrome.storage.local for grp_* keys not present in group_index and removes them.
+ * @param {Object} storageArea - chrome.storage.local
+ * @returns {Promise<{ scanned: number, removedOrphans: string[], indexCount: number }>}
+ */
+export async function reconcileOrphanKeys(storageArea) {
+  if (!storageArea) throw new Error('Storage area is required');
+  const allData = await storageArea.get(null);
+  const index = Array.isArray(allData[GROUP_INDEX_KEY]) ? allData[GROUP_INDEX_KEY] : [];
+  const indexSet = new Set(index.map(id => (id.startsWith('grp_') ? id.slice(4) : id)));
+
+  const removedOrphans = [];
+  for (const key of Object.keys(allData)) {
+    if (key.startsWith('grp_')) {
+      const cleanId = key.slice(4);
+      if (!indexSet.has(cleanId)) {
+        removedOrphans.push(key);
+      }
+    }
+  }
+
+  if (removedOrphans.length > 0) {
+    await storageArea.remove(removedOrphans);
+  }
+
+  return {
+    scanned: Object.keys(allData).filter(k => k.startsWith('grp_')).length,
+    removedOrphans,
+    indexCount: index.length
+  };
+}
+
+/**
+ * Adjust shrink-guard baseline tab count (delegates to baseline.js)
  */
 export async function adjustBaseline(storageArea, delta) {
-  if (!storageArea || !delta) return;
-  const res = await storageArea.get([BACKUP_STATE_KEY]);
-  const state = res[BACKUP_STATE_KEY] || {};
-  const current = state.baselineTabCount ?? state.lastKnownTabCount ?? 0;
-  const newBaseline = Math.max(0, current + delta);
-
-  await storageArea.set({
-    [BACKUP_STATE_KEY]: {
-      ...state,
-      baselineTabCount: newBaseline
-    }
-  });
-  return newBaseline;
+  return await applyBaselineDelta(storageArea, delta);
 }
 
 /**
@@ -423,17 +444,12 @@ export class TabVaultStorage {
       }
 
       payload[GROUP_INDEX_KEY] = newIndex;
-
-      // Update baseline directly to match the new total tab count
-      const res = await area.get([BACKUP_STATE_KEY]);
-      const state = res[BACKUP_STATE_KEY] || {};
-      payload[BACKUP_STATE_KEY] = {
-        ...state,
-        baselineTabCount: totalTabs,
-        lastKnownTabCount: totalTabs
-      };
-
       await area.set(payload);
+
+      // Derive baselineTabCount strictly from actual reconstructed group contents
+      const constructedGroups = newIndex.map(id => payload[formatGroupKey(id)]).filter(Boolean);
+      await syncBaselineFromGroups(area, constructedGroups);
+
       await this._updateSyncMetadata();
       return newIndex;
     });
@@ -497,6 +513,12 @@ export class TabVaultStorage {
   async getTotalTabCount() {
     const groups = await this.getAllGroups();
     return groups.reduce((acc, g) => acc + (g.tabs ? g.tabs.length : 0), 0);
+  }
+
+  async syncBaselineFromGroups(storageArea = null, groups = null) {
+    const area = storageArea || this._requireLocal();
+    const grps = groups || await this.getAllGroups();
+    return await syncBaselineFromGroups(area, grps);
   }
 
   async _updateSyncMetadata() {

@@ -44,6 +44,8 @@ Built from the ground up for modern Chrome Manifest V3, Tab Vault introduces def
 Available in [`dist/screenshots/`](file:///dist/screenshots/):
 1. **Light Theme Dashboard**: `dist/screenshots/tab-vault-light-1280x800.png` — Shows active session groups, Quick List starred items, search bar, and batch controls in high-contrast light mode.
 2. **Dark Theme Dashboard**: `dist/screenshots/tab-vault-dark-1280x800.png` — Shows the same rich dashboard state rendered in native dark theme.
+3. **Settings & Preferences Drawer**: `dist/screenshots/tab-vault-settings-1280x800.png` — Shows configurable restore targets, deduplication, lazy restore, startup options, and storage repair tools.
+4. **Rolling Snapshots Drawer**: `dist/screenshots/tab-vault-snapshots-1280x800.png` — Shows 5-state safety snapshots with timestamps, group/tab tallies, manual snapshots, and 1-click state rollback.
 
 ---
 

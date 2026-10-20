@@ -276,3 +276,27 @@ This document maintains the chronological, cumulative audit history of the Tab V
 - **Release Package**: Rebuilt production package `dist/tab-vault-mv3-release.zip` (38 KB, 22 files).
 - **Next Recommended Actions**: Extension is ready for 100% immediate upload to the Chrome Web Store Developer Console with assets in `dist/screenshots/` and copy from `STORE_LISTING.md`.
 
+---
+
+### [2026-10-20] Audit 11 — Pre-Publish Hardening, E2E CI, and Release Readiness Pass
+- **Task**: Execute Pre-Publish Hardening, E2E CI, and Release Readiness Pass: conduct permissions scrub and least-privilege audit, establish `baseline.js` as authoritative single-writer for `backup_state.baselineTabCount`, implement storage self-healing (`reconcileOrphanKeys`), consolidate theme settings into `vault_settings.theme` with migration, implement Puppeteer real-browser E2E harness in Chromium with 500-tab render benchmark, capture full set of 1280x800 CWS promotional screenshots (light, dark, settings drawer, snapshots drawer), add first-run hint banner, author root `PRIVACY.md` and `CHANGELOG.md`, create `.github/workflows/ci.yml`, verify 56+ passing tests, 100/100 parity, 20/20 contrast, and rebuild production ZIP.
+- **Verdict**: `PASS` (56 unit tests passing, Puppeteer real-browser E2E suite passing, 99.00ms 500-tab benchmark, 100/100 feature parity, 20/20 WCAG AA contrast pairs, and 4 promotional screenshots captured).
+- **Audit File**: [`replica/audit/11-pre-publish-hardening.md`](file:///replica/audit/11-pre-publish-hardening.md)
+- **Features & Hardening Implemented**:
+  - `extension/src/baseline.js`: Created authoritative baseline manager (`syncBaselineFromGroups`, `applyBaselineDelta`, `getBaseline`). All storage, backup, and dashboard operations routed strictly through this module.
+  - `extension/src/storage.js`: Implemented `reconcileOrphanKeys(storageArea)` to clean unindexed `grp_*` orphan keys. Wired into startup/install in `background.js` and "Repair Storage" button in settings drawer.
+  - `extension/src/settings.js` & `extension/tab-vault.js`: Consolidated theme persistence from `localStorage` into `vault_settings.theme` with automatic one-time migration (`migrateThemeSettings`).
+  - `extension/tab-vault.html` & `extension/tab-vault.js`: Added dismissible `#firstRunHint` banner card for fresh installs without prior settings. Added "Repair Storage" diagnostics button and status label in Settings drawer.
+  - `tests/e2e/dashboard.test.js`: Puppeteer E2E test suite running on `/snap/bin/chromium` (`--headless=new`). Asserts live DOM counts (2 group cards, 3 quick link pills, 7 tab rows), verifies theme toggling in live DOM and storage, executes 500-tab stress test (`renderDashboard` completed in 99.00ms), and captures 4 promotional screenshots.
+  - `.github/workflows/ci.yml`: Automated CI workflow executing unit test suite and real-browser E2E tests on push/PR.
+  - `PRIVACY.md` & `CHANGELOG.md`: Created root privacy policy (zero external transmission, local data ownership) and v1.0.0 release notes.
+- **Verification Evidence**:
+  - **Automated Unit Tests**: 56 passed, 0 failed, 0 skipped ([`11-tests.txt`](file:///replica/audit/logs/11-tests.txt)).
+  - **Puppeteer Headless E2E Verification**: Real Chromium 155 Snap passed with 0 errors ([`11-e2e.txt`](file:///replica/audit/logs/11-e2e.txt)).
+  - **500-Tab Dashboard Render Benchmark**: 99.00ms (< 500ms ceiling).
+  - **Promotional Screenshots (1280x800)**: 4 captured screenshots in `dist/screenshots/` (light, dark, settings, snapshots).
+  - **Parity Score**: 100.0 / 100 (36 of 36 counted features complete) ([`11-parity.txt`](file:///replica/audit/logs/11-parity.txt)).
+  - **WCAG Contrast**: 20 pairs checked, 0 failing AA ([`11-contrast.txt`](file:///replica/audit/logs/11-contrast.txt)).
+- **Release Package**: Rebuilt production package `dist/tab-vault-mv3-release.zip` (41 KB, 23 files).
+- **Next Recommended Actions**: Extension is hardened and 100% release-ready for immediate submission to the Chrome Web Store Developer Console with `dist/tab-vault-mv3-release.zip`, `STORE_LISTING.md`, `PRIVACY.md`, and `dist/screenshots/*.png`.
+

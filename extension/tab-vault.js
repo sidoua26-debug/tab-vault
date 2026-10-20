@@ -14,11 +14,11 @@
  * - Trash bin with 30-day retention and instant undo
  */
 
-import { TabVaultStorage, adjustBaseline, purgeExpiredTrash } from './src/storage.js';
+import { TabVaultStorage, adjustBaseline, purgeExpiredTrash, reconcileOrphanKeys } from './src/storage.js';
 import { evaluateEmptyState } from './src/wipe-detection.js';
 import { filterGroupsByQuery, countVisibleTabs } from './src/search.js';
 import { exportToPlainText, parsePlainTextImport, deduplicateTabs, formatGroupUrlsForClipboard } from './src/import-export.js';
-import { getSettings, saveSettings } from './src/settings.js';
+import { getSettings, saveSettings, migrateThemeSettings } from './src/settings.js';
 import { createSnapshot, getSnapshots, rollbackSnapshot } from './src/snapshots.js';
 
 const localArea = (typeof chrome !== 'undefined' && chrome.storage) ? chrome.storage.local : null;
@@ -33,7 +33,7 @@ let selectedTabs = new Map(); // tabId -> { tab, groupId }
 let draggedTabInfo = null; // { tabId, sourceGroupId }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  setupTheme();
+  await setupTheme();
   setupDevPanel();
   setupEventListeners();
   setupKeyboardShortcuts();
@@ -54,23 +54,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   await purgeExpiredTrash(chrome.storage.local).catch(() => {});
   await renderDashboard();
   await checkCollapseUndoBanner();
+  await checkFirstRunHint();
 
   // Clear onInstalledReason after first dashboard render
   await chrome.storage.local.remove(['onInstalledReason']).catch(() => {});
 });
 
-function setupTheme() {
-  const savedTheme = localStorage.getItem('tab_vault_theme');
-  if (savedTheme) {
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }
+async function setupTheme() {
+  const theme = await migrateThemeSettings(chrome.storage.local).catch(() => 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+  document.body.setAttribute('data-theme', theme);
 }
 
-function toggleTheme() {
+async function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme');
   const next = current === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('tab_vault_theme', next);
+  document.body.setAttribute('data-theme', next);
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('tab_vault_theme', next);
+  }
+  await saveSettings(chrome.storage.local, { theme: next, themeSetExplicitly: true });
 }
 
 async function setupDevPanel() {
@@ -90,6 +94,27 @@ async function checkCollapseUndoBanner() {
   if (lastCollapsedSession && lastCollapsedSession.tabs && lastCollapsedSession.tabs.length > 0) {
     message.textContent = `Stashed ${lastCollapsedSession.tabs.length} tabs into a new group.`;
     banner.classList.remove('hidden');
+  } else {
+    banner.classList.add('hidden');
+  }
+}
+
+async function checkFirstRunHint() {
+  const banner = document.getElementById('firstRunHint');
+  if (!banner) return;
+
+  const data = await chrome.storage.local.get(['vault_settings', 'firstRunDismissed', 'group_index']);
+  const index = Array.isArray(data.group_index) ? data.group_index : [];
+  const dismissed = Boolean(data.firstRunDismissed);
+  const isFreshInstall = !data.vault_settings;
+
+  // Show only if empty vault, fresh install (no vault_settings yet), and not dismissed
+  if (index.length === 0 && isFreshInstall && !dismissed) {
+    banner.classList.remove('hidden');
+    document.getElementById('btnDismissFirstRun')?.addEventListener('click', async () => {
+      banner.classList.add('hidden');
+      await chrome.storage.local.set({ firstRunDismissed: true });
+    }, { once: true });
   } else {
     banner.classList.add('hidden');
   }
@@ -306,6 +331,25 @@ function setupEventListeners() {
 
     settingsModal.classList.add('hidden');
     showToast('Preferences saved.');
+  });
+
+  document.getElementById('btnRepairStorage')?.addEventListener('click', async () => {
+    const statusEl = document.getElementById('repairStorageStatus');
+    if (statusEl) statusEl.textContent = 'Scanning storage...';
+
+    try {
+      const recon = await reconcileOrphanKeys(chrome.storage.local);
+      const groups = await storage.getAllGroups();
+      const updatedBaseline = await storage.syncBaselineFromGroups(chrome.storage.local, groups);
+
+      const msg = `Repaired: removed ${recon.removedOrphans.length} orphan keys; synced baseline to ${updatedBaseline} tabs.`;
+      if (statusEl) statusEl.textContent = msg;
+      showToast(msg);
+      await renderDashboard();
+    } catch (err) {
+      if (statusEl) statusEl.textContent = `Repair failed: ${err.message}`;
+      showToast(`Repair error: ${err.message}`);
+    }
   });
 
   // Batch Operations Handlers
@@ -1168,4 +1212,12 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+// Expose test hooks for E2E harness and performance benchmarking
+if (typeof window !== 'undefined') {
+  window.__tabVaultTest = {
+    renderDashboard,
+    storage
+  };
 }

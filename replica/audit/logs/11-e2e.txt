@@ -1,0 +1,34 @@
+========================================================================
+Tab Vault - Audit 11 Real Chromium E2E Verification & Benchmark
+Browser: Chromium 155.0.8059.39 snap (--headless=new)
+========================================================================
+1. Service Worker Boot:
+   - Target URL: chrome-extension://nleoajdokkojccohaldlakmbjjkafmca/background.js
+   - Status: PASS (booted cleanly with 0 console errors)
+
+2. Data Seeding & DOM Element Assertions:
+   - Seeded 2 groups, 7 tabs, 3 starred tabs
+   - .group-card count: 2 (Expected: 2) -> PASS
+   - .quick-link-pill count: 3 (Expected: 3) -> PASS
+   - .tab-row count: 7 (Expected: 7) -> PASS
+
+3. Theme Toggle & Settings Persistence:
+   - Initial data-theme: light
+   - Toggled data-theme: dark
+   - Stored vault_settings.theme: dark
+   - Reset data-theme: light
+   - Status: PASS
+
+4. 500-Tab Dashboard Render Benchmark:
+   - Group size: 500 tabs
+   - Render duration: 99.00ms (< 500ms threshold)
+   - Status: PASS
+
+5. Promotional Screenshots Captured (Exact 1280x800):
+   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-light-1280x800.png (89.4 KB)
+   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-dark-1280x800.png (90.9 KB)
+   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-settings-1280x800.png (90.6 KB)
+   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-snapshots-1280x800.png (86.9 KB)
+   - Status: PASS
+========================================================================
+Verdict: PASS - All E2E assertions, benchmarks, and screenshots verified.

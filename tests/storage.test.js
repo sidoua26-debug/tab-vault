@@ -8,6 +8,7 @@ import {
   purgeExpiredTrash,
   adjustBaseline,
   areObjectsEquivalent,
+  reconcileOrphanKeys,
   GROUP_INDEX_KEY,
   TRASH_BIN_KEY,
   BACKUP_STATE_KEY
@@ -547,5 +548,46 @@ test('Storage Layer: replaceAllGroups replaces active groups cleanly without tra
   assert.equal(state.baselineTabCount, 2);
   assert.equal(state.lastKnownTabCount, 2);
 });
+
+test('Storage Layer: reconcileOrphanKeys removes unindexed grp_* keys', async () => {
+  const local = new MockStorageArea();
+  await local.set({
+    grp_valid1: { id: 'valid1', title: 'Valid 1', tabs: [] },
+    grp_orphan1: { id: 'orphan1', title: 'Orphan 1', tabs: [] },
+    grp_orphan2: { id: 'orphan2', title: 'Orphan 2', tabs: [] },
+    [GROUP_INDEX_KEY]: ['valid1'],
+    other_setting: 123
+  });
+
+  const report = await reconcileOrphanKeys(local);
+  assert.equal(report.scanned, 3);
+  assert.deepEqual(report.removedOrphans.sort(), ['grp_orphan1', 'grp_orphan2']);
+  assert.equal(report.indexCount, 1);
+
+  const dump = local.rawDump();
+  assert.ok(dump.grp_valid1);
+  assert.equal(dump.grp_orphan1, undefined);
+  assert.equal(dump.grp_orphan2, undefined);
+  assert.equal(dump.other_setting, 123);
+});
+
+test('Storage Layer: reconcileOrphanKeys is a no-op on healthy storage', async () => {
+  const local = new MockStorageArea();
+  await local.set({
+    grp_healthy1: { id: 'healthy1', tabs: [] },
+    grp_healthy2: { id: 'healthy2', tabs: [] },
+    [GROUP_INDEX_KEY]: ['healthy1', 'healthy2']
+  });
+
+  const report = await reconcileOrphanKeys(local);
+  assert.equal(report.scanned, 2);
+  assert.deepEqual(report.removedOrphans, []);
+  assert.equal(report.indexCount, 2);
+
+  const dump = local.rawDump();
+  assert.ok(dump.grp_healthy1);
+  assert.ok(dump.grp_healthy2);
+});
+
 
 

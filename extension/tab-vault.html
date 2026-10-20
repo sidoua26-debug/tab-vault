@@ -38,6 +38,15 @@
         </div>
       </div>
 
+      <!-- First-Run Experience Hint Banner -->
+      <div id="firstRunHint" class="banner banner-info hidden">
+        <div class="banner-title">👋 Welcome to Tab Vault</div>
+        <div class="banner-message">Click the Tab Vault icon in your browser toolbar or press <strong>Alt+Shift+V</strong> to stash open tabs into an organized list. You can also right-click any page for tab stashing options.</div>
+        <div class="banner-actions">
+          <button id="btnDismissFirstRun" class="btn btn-sm btn-primary">Got it!</button>
+        </div>
+      </div>
+
       <!-- Search Toolbar -->
       <div id="searchToolbar" class="search-toolbar">
         <div class="search-box-wrapper">
@@ -151,8 +160,9 @@
           </div>
 
           <div class="settings-group">
-            <label class="settings-label">Excluded Domains</label>
-            <div id="excludedDomainsList" style="font-size: var(--type-xs-size); color: var(--color-text-muted);">None</div>
+            <label class="settings-label">Storage Maintenance</label>
+            <button id="btnRepairStorage" class="btn btn-sm btn-secondary" style="width: 100%;">Repair Storage (Clean Orphan Keys & Sync Baseline)</button>
+            <div id="repairStorageStatus" style="font-size: var(--type-xs-size); color: var(--color-text-muted); margin-top: 6px;"></div>
           </div>
 
           <div class="modal-actions">

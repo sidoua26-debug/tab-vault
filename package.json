@@ -6,7 +6,15 @@
   "scripts": {
     "test": "node --test tests/*.test.js"
   },
-  "keywords": ["chrome-extension", "tab-manager", "manifest-v3", "disaster-recovery"],
+  "keywords": [
+    "chrome-extension",
+    "tab-manager",
+    "manifest-v3",
+    "disaster-recovery"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "puppeteer-core": "^25.15.0"
+  }
 }

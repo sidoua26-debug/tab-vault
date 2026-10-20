@@ -11,7 +11,7 @@
  * - Coordinates large backup Blob URLs with offscreen document
  */
 
-import { TabVaultStorage, rebuildIndexFromKeys, purgeExpiredTrash } from './src/storage.js';
+import { TabVaultStorage, rebuildIndexFromKeys, purgeExpiredTrash, reconcileOrphanKeys } from './src/storage.js';
 import { executeAutoBackup } from './src/backup.js';
 import { filterTabsForCollapse } from './src/collapse-filter.js';
 import { setupContextMenus, handleContextMenuClick } from './src/context-menu.js';
@@ -30,8 +30,12 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     installedAt: Date.now()
   });
 
-  // Rebuild index and purge trash
+  // Reconcile orphan keys, rebuild index, sync baseline, and purge trash
+  await reconcileOrphanKeys(chrome.storage.local).catch(() => {});
   await rebuildIndexFromKeys(chrome.storage.local).catch(() => {});
+  if (storage) {
+    await storage.syncBaselineFromGroups().catch(() => {});
+  }
   await purgeExpiredTrash(chrome.storage.local).catch(() => {});
 
   // Daily heartbeat backup alarm (every 24h = 1440 min)
@@ -44,7 +48,11 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 });
 
 chrome.runtime.onStartup.addListener(async () => {
+  await reconcileOrphanKeys(chrome.storage.local).catch(() => {});
   await rebuildIndexFromKeys(chrome.storage.local).catch(() => {});
+  if (storage) {
+    await storage.syncBaselineFromGroups().catch(() => {});
+  }
   await purgeExpiredTrash(chrome.storage.local).catch(() => {});
   if (chrome.contextMenus) {
     setupContextMenus(chrome.contextMenus);
