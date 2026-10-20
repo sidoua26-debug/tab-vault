@@ -17,7 +17,8 @@
       <div class="header-actions">
         <button id="btnViewActive" class="btn btn-sm btn-secondary active-view-btn">Active Tabs</button>
         <button id="btnViewTrash" class="btn btn-sm btn-ghost">Trash (<span id="trashCount">0</span>)</button>
-        <button id="btnExport" class="btn btn-sm btn-secondary" title="Export backup to Downloads">Export Backup</button>
+        <button id="btnTextImportExport" class="btn btn-sm btn-secondary" title="Import or Export plain-text OneTab format">Import / Export</button>
+        <button id="btnExport" class="btn btn-sm btn-secondary" title="Export JSON backup to Downloads">Export JSON</button>
         <button id="btnRestorePicker" class="btn btn-sm btn-secondary" title="Restore from backup file">Restore File...</button>
         <input type="file" id="fileInput" accept=".json,.txt" style="display:none">
         <button id="btnThemeToggle" class="btn btn-sm btn-ghost" title="Toggle Light/Dark Theme">🌓</button>
@@ -35,6 +36,18 @@
         </div>
       </div>
 
+      <!-- Search Toolbar -->
+      <div id="searchToolbar" class="search-toolbar">
+        <div class="search-box-wrapper">
+          <input type="search" id="searchInput" class="search-input" placeholder="Search tabs by title or URL... (Press / to focus)" aria-label="Search saved tabs">
+          <button id="btnSearchClear" class="search-clear-btn" aria-label="Clear search">✕</button>
+        </div>
+        <div class="toolbar-controls">
+          <span id="searchResultCount" class="search-badge"></span>
+          <button id="btnDedupAll" class="btn btn-sm btn-ghost" title="Remove duplicate URLs across all groups">Dedup</button>
+        </div>
+      </div>
+
       <!-- Disaster Recovery / Empty State Banner Container -->
       <div id="bannerContainer"></div>
 
@@ -48,6 +61,24 @@
           <button id="btnEmptyTrash" class="btn btn-sm btn-danger">Empty Trash</button>
         </div>
         <div id="trashList" class="trash-list"></div>
+      </div>
+
+      <!-- Import / Export Modal -->
+      <div id="importExportModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="modalTitle">Import / Export Tabs (OneTab Format)</h3>
+            <button id="btnModalClose" class="btn btn-sm btn-ghost" aria-label="Close dialog">✕</button>
+          </div>
+          <p style="font-size: var(--type-xs-size); color: var(--color-text-muted); margin-bottom: 8px;">
+            Format: One URL per line, optionally followed by " | Title". Blank lines create separate tab groups.
+          </p>
+          <textarea id="importExportText" class="modal-textarea" placeholder="https://example.com | Example Page&#10;https://wikipedia.org&#10;&#10;https://github.com | GitHub"></textarea>
+          <div class="modal-actions">
+            <button id="btnCopyExport" class="btn btn-sm btn-secondary">Copy to Clipboard</button>
+            <button id="btnPerformImport" class="btn btn-sm btn-primary">Import into Tab Vault</button>
+          </div>
+        </div>
       </div>
 
       <!-- Developer / QA Simulation Controls (Dev Flag Only: ?dev=1) -->

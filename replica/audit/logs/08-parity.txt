@@ -1,0 +1,36 @@
+Parity: 78.3 / 100
+
+features 78.3  (36 counted, must-haves 13 of 13 done)
+
+By area, weakest first
+- options & settings            50.0  (6 features)
+- search & navigation           71.4  (3 features)
+- tab dashboard                 75.0  (14 features)
+- runtime & storage             75.0  (3 features)
+- toolbar action               100.0  (2 features)
+- import & export              100.0  (3 features)
+- context menu                 100.0  (5 features)
+
+Missing, in build order
+- [should] options & settings: Configurable restore retention policy, no  (Option to keep tabs in list vs remove when restored)
+- [should] options & settings: Configurable restore window target, no  (Option to restore in current window vs new window)
+- [should] options & settings: Startup behavior option, no  (Option to open dashboard tab on browser launch)
+- [should] runtime & storage: Incognito window tab capture support, no  (Support private browsing windows when enabled)
+- [should] search & navigation: Omnibox keyword search, no  (Type keyword in address bar to query saved tabs)
+- [should] tab dashboard: Drag and drop tab reordering, no  (Reorder tabs within and between groups)
+- [should] tab dashboard: Drag tab to empty area to create new group, no  (Split tabs into new custom group)
+- [should] tab dashboard: Multi-select tabs for batch operations, no  (Select multiple items via checkboxes)
+- [could] tab dashboard: Quick list pinned sidebar column, no  (Dedicated quick-access column for priority links)
+- [could] tab dashboard: Star individual tab items, no  (Mark important individual links)
+
+Left out on purpose (not scored)
+- Share group as public web page with QR code: Proprietary cloud hosting service; out of scope for local-first MV3 extension
+- Encrypted cloud sync between devices: Proprietary cloud sync backend; keep local-first or use file export/import
+
+Yours, not in the original (not scored)
+- Safe-by-default collapse with instant undo
+- Trash bin with 30-day retention and instant undo for deleted tabs and groups
+- JSON export keeping group names notes and folders
+- Auto-backup to Downloads plus wipe detection and restore
+- Rolling in-extension snapshots
+- Lazy tab restore to prevent memory spikes

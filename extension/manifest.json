@@ -9,7 +9,8 @@
     "unlimitedStorage",
     "downloads",
     "alarms",
-    "offscreen"
+    "offscreen",
+    "contextMenus"
   ],
   "action": {
     "default_title": "Tab Vault — Stash current window tabs",
@@ -27,5 +28,21 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+V",
+        "mac": "Alt+Shift+V"
+      },
+      "description": "Stash tabs in current window"
+    },
+    "open_vault": {
+      "suggested_key": {
+        "default": "Alt+Shift+O",
+        "mac": "Alt+Shift+O"
+      },
+      "description": "Open or focus Tab Vault dashboard"
+    }
   }
 }

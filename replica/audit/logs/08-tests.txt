@@ -1,0 +1,47 @@
+✔ Backup Module: slot calculation and filename rotation (2.146347ms)
+✔ Backup Module: sanitizeGroupsForBackup excludes incognito tabs (0.356277ms)
+✔ Backup Module: Empty Guard aborts when tabs count is 0 (0.739925ms)
+✔ Backup Module: Shrink Guard blocks backup if tabs drop > 50% (5.652236ms)
+✔ Backup Module: In-app removals lower baseline, undo raises baseline, and restore a 100-tab group allows backup to succeed (5.578482ms)
+✔ Backup Module: Encoded URL length check triggers offscreen Blob URL creation (388.49832ms)
+✔ Backup Module: backup_state updated ONLY after download complete; on failure state kept and lastError recorded (1.553528ms)
+✔ Backup Module: regression - encoded URL length measurement accounts for URI encoding expansion (44.285603ms)
+✔ Collapse Filter: skips pinned tabs and non-http(s) pages (1.494197ms)
+✔ Context Menu: registers comprehensive menu actions (5.574796ms)
+✔ Context Menu: handleContextMenuClick handles stash_current_tab (0.509704ms)
+✔ Context Menu: handleContextMenuClick handles exclude_domain (0.391623ms)
+✔ Import/Export: exportToPlainText formats URLs and titles separated by double newline (2.314072ms)
+✔ Import/Export: parsePlainTextImport parses OneTab text with url | title and bare URLs (0.832138ms)
+✔ Import/Export: deduplicateTabs drops duplicate URLs while preserving order (0.665435ms)
+✔ Import/Export: formatGroupUrlsForClipboard formats list of raw URLs (0.383958ms)
+✔ Search Module: empty or whitespace query returns all groups unchanged (1.903613ms)
+✔ Search Module: single token matches substring in tab title or URL (0.970807ms)
+✔ Search Module: multiple tokens require all tokens to match (0.397775ms)
+✔ Search Module: group title match includes entire group tabs (0.308006ms)
+✔ Search Module: countVisibleTabs returns accurate tally (0.552975ms)
+✔ Storage Layer: formatGroupKey (7.295137ms)
+✔ Storage Layer: writeNewVerifySwap atomic workflow (1.564879ms)
+✔ Storage Layer: writeNewVerifySwap aborts on corruption during staging (0.640729ms)
+✔ Storage Layer: parallel saveGroup calls serialized without race conditions (11.287549ms)
+✔ Storage Layer: rebuildIndexFromKeys reconstructs group_index from grp_* keys (0.681316ms)
+✔ Storage Layer: 30-day trash purge cleans expired items on startup (0.463197ms)
+✔ Storage Layer: soft-delete, undo, and restore from trash bin (3.683516ms)
+✔ Storage Layer: regression - concurrent restore and save operations do not deadlock (3.879572ms)
+✔ Storage Layer: areObjectsEquivalent deep structural equality checks (0.719957ms)
+✔ Storage Layer: regression - writeNewVerifySwap succeeds when storage area reorders object keys (0.738873ms)
+✔ Storage Layer: backup restoration workflow restores groups and updates group_index (1.143721ms)
+✔ Storage Layer: malformed backup data throws error and preserves existing data (0.675304ms)
+✔ Wipe Detection: findRecommendedBackup selection logic (3.071019ms)
+✔ Real Flow: stash -> restore all -> empty (no alarm) (4.274232ms)
+✔ Real Flow: stash -> delete all -> empty (no alarm) (1.145785ms)
+✔ Real Flow: stash -> local.clear() with backup file (alarm) (2.418016ms)
+✔ Real Flow: stash -> local.clear() without backup file (alarm) (1.55456ms)
+✔ Real Flow: Scenario 4 - signed-out Chrome / uninitialized sync with backup in Downloads triggers recovery alarm (3.008154ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 613.35854
