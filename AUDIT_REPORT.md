@@ -20,15 +20,16 @@ This document maintains the chronological, cumulative audit history of the Tab V
 
 ---
 
-## Project Status Scorecard
+## Project Status Scorecard (Reflects Latest Audit: Audit 05 / 2026-10-20)
 
 | Milestone / Gate | Score / Count | Status | Notes |
 | :--- | :--- | :--- | :--- |
 | **Milestone 1 Scope** | Core Storage & Disaster Recovery | **Complete** | Storage layer, 3-file rotated auto-backup, wipe detection, 20k tabs fallback. |
-| **Automated Tests** | 18 Passed / 0 Failed | **PASS** | Run via `timeout 120 node --test tests/*.test.js` ([log](file:///replica/audit/logs/03-tests.txt)). |
-| **WCAG Contrast** | 20 Pairs / 0 Failing AA | **PASS** | Light & dark theme tokens verified with `contrast.py` ([log](file:///replica/audit/logs/03-contrast.txt)). |
-| **Parity Score** | 36.1 / 100 | **In Progress** | 10 of 13 must-have features completed ([log](file:///replica/audit/logs/03-parity.txt)). |
-| **Milestone 2 Scope** | Search, Import/Export, Context Menus | **Not Started** | Scheduled after Milestone 1.5 stabilization. |
+| **Milestone 1.5 Scope** | Concurrency, Filters & Hardening | **Automated PASS** | Deadlock-free mutex, encoded URL length check, 2-way baseline, collapse filter. |
+| **Automated Tests** | 22 Passed / 0 Failed | **PASS** | Run via `timeout 120 node --test tests/*.test.js` ([log](file:///replica/audit/logs/05-tests.txt)). |
+| **WCAG Contrast** | 20 Pairs / 0 Failing AA | **PASS** | Light & dark theme tokens verified with `contrast.py` ([log](file:///replica/audit/logs/05-contrast.txt)). |
+| **Parity Score** | 20.5 / 100 | **In Progress** | 0 of 13 must-haves marked fully complete in `features.csv` because all 10 implemented items are honestly classified as `partial` pending manual verification in real Chrome ([log](file:///replica/audit/logs/05-parity.txt)). |
+| **Milestone 2 Scope** | Search, Import/Export, Context Menus | **Not Started** | Strictly blocked until live manual Chrome verification is complete. |
 
 ---
 
@@ -119,4 +120,31 @@ This document maintains the chronological, cumulative audit history of the Tab V
 - **Next Recommended Actions**:
   - User loads unpacked extension from `extension/` in Chrome and performs manual smoke tests.
   - Update verified rows in `features.csv` to `yes`.
+  - Begin Milestone 2.
+
+---
+
+### [2026-10-20] Audit 05 — Scorecard Correction, Automated Suite Verification & Safe Transition
+- **Task**: Audit correction, verification, and safe continuation: resolve scorecard discrepancy in `AUDIT_REPORT.md`, verify Milestone 1.5 automated implementation across full test suite (22 tests), parity scoring (20.5/100), and WCAG contrast (20 pairs passing AA), record dedicated Audit 05 log artifacts, formulate manual Chrome checklist (`MANUAL VERIFICATION REQUIRED`), and safely transition without starting Milestone 2 prematurely.
+- **Verdict**: `PASS WITH WARNINGS` (Automated suite 100% green: 22 passed / 0 failed; warning: live manual browser verification in Chrome required prior to Milestone 2).
+- **Audit File**: [`replica/audit/05-audit-scorecard-verification.md`](file:///replica/audit/05-audit-scorecard-verification.md)
+- **Files Created / Modified**:
+  - `AUDIT_REPORT.md` (Updated scorecard to Audit 05 and appended Audit 05 history record)
+  - `replica/audit/05-audit-scorecard-verification.md` (Created task audit report)
+  - `replica/audit/logs/05-tests.txt` (Automated test log: 22 passed, 0 failed, 773ms)
+  - `replica/audit/logs/05-parity.txt` (Parity verification log: 20.5 / 100)
+  - `replica/audit/logs/05-contrast.txt` (Contrast verification log: 20 pairs passed, 0 failing AA)
+- **Quality & Health Checks Run**:
+  - **Automated Tests**: `timeout 120 node --test tests/*.test.js` $\rightarrow$ 22 passed, 0 failed, duration 773ms ([`05-tests.txt`](file:///replica/audit/logs/05-tests.txt)).
+  - **Feature Parity**: `python3 parity.py replica/features.csv` $\rightarrow$ 20.5 / 100 ([`05-parity.txt`](file:///replica/audit/logs/05-parity.txt)). Scorecard discrepancy reconciled: score changed from 36.1 to 20.5 because all 10 implemented must-haves were conservatively reclassified from `clone=yes` to `clone=partial` pending manual verification in real Chrome.
+  - **WCAG Contrast**: `python3 contrast.py replica/design/tokens.json` $\rightarrow$ 20 pairs checked, 0 failing AA ([`05-contrast.txt`](file:///replica/audit/logs/05-contrast.txt)).
+- **Distinction of Verification**:
+  - **Automated Verification (PASS)**: Logic, atomic storage swaps, concurrency mutexes, encoded URL limits, and wipe detection matrices verified under Node test runner.
+  - **Manual Browser Verification (REQUIRED)**: Live unpacked Chrome execution (`chrome://extensions`) required to test real extension button clicks, live download shelf appearance, and DevTools console-triggered profile wipes.
+- **Remaining Issues & Blockers**:
+  - Milestone 2 features (search filter, OneTab text importer/exporter) remain unstarted.
+  - Must-haves in `features.csv` remain marked `partial` until manual Chrome smoke test is performed.
+- **Next Recommended Actions**:
+  - User performs manual verification in Chrome following the 4-step checklist.
+  - Promote verified rows in `features.csv` to `clone=yes`.
   - Begin Milestone 2.
