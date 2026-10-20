@@ -15,6 +15,8 @@
         <span class="brand-title">Tab Vault</span>
       </div>
       <div class="header-actions">
+        <button id="btnViewActive" class="btn btn-sm btn-secondary active-view-btn">Active Tabs</button>
+        <button id="btnViewTrash" class="btn btn-sm btn-ghost">Trash (<span id="trashCount">0</span>)</button>
         <button id="btnExport" class="btn btn-sm btn-secondary" title="Export backup to Downloads">Export Backup</button>
         <button id="btnRestorePicker" class="btn btn-sm btn-secondary" title="Restore from backup file">Restore File...</button>
         <input type="file" id="fileInput" accept=".json,.txt" style="display:none">
@@ -23,15 +25,34 @@
     </header>
 
     <main class="main-content">
+      <!-- Safe Collapse Undo Banner -->
+      <div id="collapseUndoBanner" class="banner banner-info hidden">
+        <div class="banner-title">📥 Tabs Stashed</div>
+        <div class="banner-message" id="collapseUndoMessage">Tabs were collapsed into a new group.</div>
+        <div class="banner-actions">
+          <button id="btnUndoCollapse" class="btn btn-sm btn-primary">Undo — Reopen tabs in window</button>
+          <button id="btnDismissCollapseUndo" class="btn btn-sm btn-ghost">Dismiss</button>
+        </div>
+      </div>
+
       <!-- Disaster Recovery / Empty State Banner Container -->
       <div id="bannerContainer"></div>
 
-      <!-- Tab Groups List Container -->
+      <!-- Tab Groups List Container (Active View) -->
       <div id="groupsList" class="groups-list"></div>
 
-      <!-- Testing / Wipe Simulation Toolbar (for testing milestone 1) -->
-      <section class="test-panel">
-        <div class="test-panel-header">Developer / QA Simulation Controls (Milestone 1)</div>
+      <!-- Trash Bin View (Hidden by default) -->
+      <div id="trashContainer" class="trash-container hidden">
+        <div class="trash-header">
+          <h2>Trash Bin (30-day retention)</h2>
+          <button id="btnEmptyTrash" class="btn btn-sm btn-danger">Empty Trash</button>
+        </div>
+        <div id="trashList" class="trash-list"></div>
+      </div>
+
+      <!-- Developer / QA Simulation Controls (Dev Flag Only: ?dev=1) -->
+      <section id="devPanel" class="test-panel" style="display: none;">
+        <div class="test-panel-header">Developer / QA Simulation Controls</div>
         <div class="test-panel-body">
           <span>Simulate local data loss to test disaster recovery:</span>
           <button id="btnSimulateWipe" class="btn btn-sm btn-danger">Simulate Wipe (chrome.storage.local.clear())</button>

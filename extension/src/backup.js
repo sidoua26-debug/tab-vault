@@ -2,12 +2,12 @@
  * Tab Vault Backup Module
  * 3-file rotated JSON auto-export with empty guard, >50% shrink guard,
  * in-app delete baseline adjustment, incognito tab exclusion,
- * Data URL export with offscreen fallback for payloads > 2MB.
+ * Data URL export with offscreen fallback for encoded URLs > 2MB.
  */
 
 import { BACKUP_STATE_KEY } from './storage.js';
 
-export const DATA_URL_MAX_BYTES = 2 * 1024 * 1024; // 2MB threshold
+export const DATA_URL_MAX_LENGTH = 2 * 1024 * 1024; // 2 million characters limit on encoded URL
 export const BACKUP_FILE_PREFIX = 'tab-vault-backup-';
 export const ROTATION_SLOTS = 3;
 
@@ -64,13 +64,13 @@ export function getBackupFilename(slot) {
 }
 
 /**
- * Adjust the shrink-guard baseline when an in-app deletion occurs
+ * Adjust the shrink-guard baseline when an in-app deletion or restore occurs
  */
 export async function adjustBaselineOnDelete(storageArea, deletedTabCount) {
   if (!storageArea || !deletedTabCount || deletedTabCount <= 0) return;
   const res = await storageArea.get([BACKUP_STATE_KEY]);
   const state = res[BACKUP_STATE_KEY] || {};
-  const currentBaseline = state.baselineTabCount || state.lastKnownTabCount || 0;
+  const currentBaseline = state.baselineTabCount ?? state.lastKnownTabCount ?? 0;
   const newBaseline = Math.max(0, currentBaseline - deletedTabCount);
 
   await storageArea.set({
@@ -79,6 +79,49 @@ export async function adjustBaselineOnDelete(storageArea, deletedTabCount) {
       baselineTabCount: newBaseline
     }
   });
+  return newBaseline;
+}
+
+/**
+ * Adjust shrink-guard baseline when an undo occurs (raises baseline)
+ */
+export async function adjustBaselineOnUndo(storageArea, restoredTabCount) {
+  if (!storageArea || !restoredTabCount || restoredTabCount <= 0) return;
+  const res = await storageArea.get([BACKUP_STATE_KEY]);
+  const state = res[BACKUP_STATE_KEY] || {};
+  const currentBaseline = state.baselineTabCount ?? state.lastKnownTabCount ?? 0;
+  const newBaseline = currentBaseline + restoredTabCount;
+
+  await storageArea.set({
+    [BACKUP_STATE_KEY]: {
+      ...state,
+      baselineTabCount: newBaseline
+    }
+  });
+  return newBaseline;
+}
+
+/**
+ * Wait for download completion (or error)
+ */
+async function waitForDownload(downloadsApi, downloadId) {
+  if (!downloadsApi || !downloadId) return true;
+  if (typeof downloadsApi.search !== 'function') return true;
+
+  // Poll search for state up to 10 seconds
+  const start = Date.now();
+  while (Date.now() - start < 10000) {
+    const results = await downloadsApi.search({ id: downloadId });
+    if (results && results.length > 0) {
+      const item = results[0];
+      if (item.state === 'complete') return true;
+      if (item.state === 'interrupted' || item.error) {
+        throw new Error(item.error || 'Download interrupted');
+      }
+    }
+    await new Promise(r => setTimeout(r, 100));
+  }
+  return true;
 }
 
 /**
@@ -128,71 +171,124 @@ export async function executeAutoBackup({
   // 4. Payload compilation
   const payload = buildBackupPayload(sanitizedGroups);
   const jsonString = JSON.stringify(payload, null, 2);
-  const byteLength = new TextEncoder().encode(jsonString).length;
+
+  // 5. Measure data-URL limit on the ENCODED URL length, not raw bytes
+  const dataUrlPrefix = 'data:application/json;charset=utf-8,';
+  const encodedContent = encodeURIComponent(jsonString);
+  const totalEncodedLength = dataUrlPrefix.length + encodedContent.length;
 
   let exportMethod = 'data_url';
+  let downloadUrl = null;
+  let createdBlobUrl = null;
 
-  // 5. Size check and export dispatch
-  if (byteLength <= DATA_URL_MAX_BYTES) {
-    // Data URL path
-    exportMethod = 'data_url';
-    const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonString);
+  try {
+    if (totalEncodedLength <= DATA_URL_MAX_LENGTH) {
+      exportMethod = 'data_url';
+      downloadUrl = dataUrlPrefix + encodedContent;
+    } else {
+      exportMethod = 'offscreen_document';
+      // Have the offscreen doc create the Blob URL and return it to the caller
+      if (offscreenHandler) {
+        const offscreenRes = await offscreenHandler({
+          action: 'createBlobUrl',
+          data: jsonString,
+          filename
+        });
+        if (!offscreenRes || !offscreenRes.blobUrl) {
+          throw new Error('Offscreen document failed to create Blob URL');
+        }
+        createdBlobUrl = offscreenRes.blobUrl;
+        downloadUrl = createdBlobUrl;
+      } else if (typeof chrome !== 'undefined' && chrome.offscreen) {
+        createdBlobUrl = await requestBlobUrlFromOffscreen(jsonString);
+        downloadUrl = createdBlobUrl;
+      } else {
+        throw new Error('Offscreen handler unavailable for payload exceeding Data URL limit');
+      }
+    }
 
+    // Call downloads API from the service worker / caller context
+    let downloadId = null;
     if (downloadsApi) {
-      await downloadsApi.download({
-        url: dataUrl,
+      downloadId = await downloadsApi.download({
+        url: downloadUrl,
         filename,
         conflictAction: 'overwrite',
         saveAs: false
       });
+      // Confirm download completion
+      await waitForDownload(downloadsApi, downloadId);
     }
-  } else {
-    // Offscreen document fallback path
-    exportMethod = 'offscreen_document';
-    if (offscreenHandler) {
-      await offscreenHandler({
-        action: 'createBlobAndDownload',
-        data: jsonString,
-        filename,
-        byteLength
-      });
-    } else if (downloadsApi && typeof chrome !== 'undefined' && chrome.offscreen) {
-      // In-extension offscreen delegation
-      await delegateToOffscreenDocument(jsonString, filename);
+
+    // Revoke blob URL if created
+    if (createdBlobUrl) {
+      if (offscreenHandler) {
+        await offscreenHandler({ action: 'revokeBlobUrl', blobUrl: createdBlobUrl });
+      } else if (typeof chrome !== 'undefined' && chrome.runtime) {
+        await chrome.runtime.sendMessage({
+          target: 'offscreen',
+          action: 'revokeBlobUrl',
+          blobUrl: createdBlobUrl
+        }).catch(() => {});
+      }
     }
+
+    // Update backup_state ONLY after download is confirmed complete
+    const newState = {
+      ...backupState,
+      currentSlot: nextSlot,
+      lastBackupTimestamp: Date.now(),
+      lastKnownTabCount: totalTabs,
+      baselineTabCount: totalTabs,
+      lastExportMethod: exportMethod,
+      lastExportLength: totalEncodedLength,
+      lastError: null
+    };
+
+    await storageArea.set({
+      [BACKUP_STATE_KEY]: newState
+    });
+
+    return {
+      success: true,
+      slot: nextSlot,
+      filename,
+      tabCount: totalTabs,
+      encodedLength: totalEncodedLength,
+      exportMethod,
+      downloadId
+    };
+
+  } catch (err) {
+    // On failure: keep state and record lastError
+    const failureState = {
+      ...backupState,
+      lastError: err.message,
+      lastErrorTimestamp: Date.now()
+    };
+    await storageArea.set({
+      [BACKUP_STATE_KEY]: failureState
+    });
+
+    // Cleanup blob url if needed
+    if (createdBlobUrl && offscreenHandler) {
+      await offscreenHandler({ action: 'revokeBlobUrl', blobUrl: createdBlobUrl }).catch(() => {});
+    }
+
+    return {
+      success: false,
+      reason: 'download_failed',
+      error: err.message,
+      currentSlot: backupState.currentSlot
+    };
   }
-
-  // 6. Update backup state
-  const newState = {
-    ...backupState,
-    currentSlot: nextSlot,
-    lastBackupTimestamp: Date.now(),
-    lastKnownTabCount: totalTabs,
-    baselineTabCount: totalTabs,
-    lastExportMethod: exportMethod,
-    lastExportBytes: byteLength
-  };
-
-  await storageArea.set({
-    [BACKUP_STATE_KEY]: newState
-  });
-
-  return {
-    success: true,
-    slot: nextSlot,
-    filename,
-    tabCount: totalTabs,
-    byteLength,
-    exportMethod
-  };
 }
 
 /**
  * Extension offscreen bridge helper for MV3
  */
-async function delegateToOffscreenDocument(jsonString, filename) {
+async function requestBlobUrlFromOffscreen(jsonString) {
   const OFFSCREEN_URL = 'offscreen.html';
-  // Check if offscreen doc exists
   if (chrome.runtime.getContexts) {
     const contexts = await chrome.runtime.getContexts({
       contextTypes: ['OFFSCREEN_DOCUMENT']
@@ -206,10 +302,14 @@ async function delegateToOffscreenDocument(jsonString, filename) {
     }
   }
 
-  await chrome.runtime.sendMessage({
+  const response = await chrome.runtime.sendMessage({
     target: 'offscreen',
-    action: 'downloadLargeBackup',
-    data: jsonString,
-    filename
+    action: 'createBlobUrl',
+    data: jsonString
   });
+
+  if (!response || !response.success || !response.blobUrl) {
+    throw new Error(response?.error || 'Offscreen document failed to return Blob URL');
+  }
+  return response.blobUrl;
 }

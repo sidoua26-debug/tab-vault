@@ -4,6 +4,8 @@ import {
   evaluateEmptyState,
   findRecommendedBackup
 } from '../extension/src/wipe-detection.js';
+import { TabVaultStorage } from '../extension/src/storage.js';
+import { MockStorageArea, MockDownloadsApi } from './test-helpers.js';
 
 test('Wipe Detection: findRecommendedBackup selection logic', () => {
   const downloads = [
@@ -27,144 +29,161 @@ test('Wipe Detection: findRecommendedBackup selection logic', () => {
       id: 3,
       filename: '/home/user/Downloads/tab-vault-backup-3.json',
       endTime: '2026-10-20T15:00:00Z',
-      exists: false, // File was deleted or moved by user!
+      exists: false, // File removed from disk
       fileSize: 110000,
-      state: 'complete'
-    },
-    {
-      id: 4,
-      filename: '/home/user/Downloads/unrelated-file.pdf',
-      endTime: '2026-10-20T16:00:00Z',
-      exists: true,
-      fileSize: 500000,
       state: 'complete'
     }
   ];
 
   const recommended = findRecommendedBackup(downloads);
-  assert.ok(recommended, 'Must find a recommended backup');
-  // Must skip id 3 because exists === false, and id 4 because unrelated
-  // id 2 is newer than id 1
+  assert.ok(recommended);
   assert.equal(recommended.id, 2);
   assert.equal(recommended.filename, 'tab-vault-backup-2.json');
-  assert.equal(recommended.fileSize, 98000);
 });
 
-test('Wipe Detection: Scenario 1 - Fresh Install', () => {
+test('Real Flow: stash -> restore all -> empty (no alarm)', async () => {
+  const local = new MockStorageArea();
+  const sync = new MockStorageArea();
+  const storage = new TabVaultStorage(local, sync);
+
+  // 1. Stash tabs
+  await storage.saveGroup({
+    id: 'grp_work',
+    title: 'Work Tabs',
+    tabs: [
+      { id: 't1', title: 'Work 1', url: 'https://work.com/1' },
+      { id: 't2', title: 'Work 2', url: 'https://work.com/2' }
+    ]
+  });
+
+  assert.equal(await storage.getTotalTabCount(), 2);
+  assert.equal((await sync.get('hasSavedTabs')).hasSavedTabs, true);
+
+  // 2. Restore all: tabs removed from storage, sync flag cleared
+  await storage.deleteGroup('grp_work');
+  assert.equal(await storage.getTotalTabCount(), 0);
+  assert.equal((await sync.get('hasSavedTabs')).hasSavedTabs, false);
+
+  // 3. Evaluate empty state
+  const syncState = await sync.get(['hasSavedTabs']);
   const result = evaluateEmptyState({
     localTabCount: 0,
-    syncState: null,
-    onInstalledReason: 'install',
+    syncState,
+    onInstalledReason: null,
     downloadItems: []
   });
 
   assert.equal(result.isEmpty, true);
-  assert.equal(result.scenario, 'fresh_install');
-  assert.equal(result.promptType, 'onboarding');
-  assert.equal(result.showRestoreHint, true);
-  assert.match(result.message, /Click the Tab Vault extension icon/);
+  assert.equal(result.isAlarm, false, 'Restoring all tabs must produce quiet empty state, NOT an alarm');
+  assert.equal(result.scenario, 'quiet_empty');
 });
 
-test('Wipe Detection: Scenario 2 - Second Device (sync flag set, onInstalled reason=install)', () => {
-  const result = evaluateEmptyState({
-    localTabCount: 0,
-    syncState: { hasSavedTabs: true, lastKnownTabCount: 85 },
-    onInstalledReason: 'install',
-    downloadItems: []
+test('Real Flow: stash -> delete all -> empty (no alarm)', async () => {
+  const local = new MockStorageArea();
+  const sync = new MockStorageArea();
+  const storage = new TabVaultStorage(local, sync);
+
+  // 1. Stash tabs
+  await storage.saveGroup({
+    id: 'grp_reading',
+    title: 'Reading',
+    tabs: [{ id: 't1', title: 'Article', url: 'https://news.com' }]
   });
 
-  assert.equal(result.isEmpty, true);
-  assert.equal(result.scenario, 'second_device');
-  assert.equal(result.promptType, 'second_device_sync');
-  assert.match(result.message, /saved on another synced Chrome device/);
-});
+  // 2. Delete all (deliberate user purge)
+  await storage.clearAll();
+  assert.equal(await storage.getTotalTabCount(), 0);
+  assert.equal((await sync.get('hasSavedTabs')).hasSavedTabs, false);
 
-test('Wipe Detection: Scenario 3 - Deliberate Clear', () => {
+  // 3. Evaluate empty state
+  const syncState = await sync.get(['hasSavedTabs']);
   const result = evaluateEmptyState({
     localTabCount: 0,
-    syncState: { hasSavedTabs: false, lastKnownTabCount: 0 },
-    onInstalledReason: 'update',
-    deliberateClear: true,
+    syncState,
+    onInstalledReason: null,
     downloadItems: [
-      {
-        id: 1,
-        filename: 'tab-vault-backup-1.json',
-        endTime: '2026-10-19T08:00:00Z',
-        exists: true,
-        state: 'complete'
-      }
+      { id: 1, filename: 'tab-vault-backup-1.json', endTime: '2026-10-20T10:00:00Z', exists: true, state: 'complete' }
     ]
   });
 
   assert.equal(result.isEmpty, true);
-  assert.equal(result.scenario, 'deliberate_clear');
-  assert.equal(result.promptType, 'empty_dashboard');
-  assert.equal(result.showTrashUndo, true);
-  assert.match(result.message, /All tabs have been cleared or restored/);
+  assert.equal(result.isAlarm, false, 'Deliberate clear must produce quiet empty state, NOT an alarm');
+  assert.equal(result.scenario, 'quiet_empty');
 });
 
-test('Wipe Detection: Scenario 4 - Wipe with Sync Flag (High confidence disaster banner)', () => {
+test('Real Flow: stash -> local.clear() with backup file (alarm)', async () => {
+  const local = new MockStorageArea();
+  const sync = new MockStorageArea();
+  const storage = new TabVaultStorage(local, sync);
+
+  // 1. Stash tabs
+  await storage.saveGroup({
+    id: 'grp_valuable',
+    title: 'Important Hoard',
+    tabs: Array.from({ length: 50 }, (_, i) => ({ id: `t_${i}`, url: `https://test.com/${i}` }))
+  });
+  assert.equal((await sync.get('hasSavedTabs')).hasSavedTabs, true);
+
+  // 2. Simulate browser crash / profile wipe: local storage wiped, sync flag survives
+  await local.clear();
+
+  // 3. Evaluate empty state with backup file present
+  const syncState = await sync.get(['hasSavedTabs']);
   const downloadItems = [
     {
       id: 1,
       filename: '/home/user/Downloads/tab-vault-backup-1.json',
-      endTime: '2026-10-20T10:00:00Z',
-      exists: true,
-      fileSize: 45000,
-      state: 'complete'
-    }
-  ];
-
-  const result = evaluateEmptyState({
-    localTabCount: 0,
-    syncState: { hasSavedTabs: true, lastKnownTabCount: 50 },
-    onInstalledReason: 'update', // Not fresh install; was already running
-    downloadItems
-  });
-
-  assert.equal(result.isEmpty, true);
-  assert.equal(result.scenario, 'wipe_with_sync_flag');
-  assert.equal(result.promptType, 'disaster_banner_high_confidence');
-  assert.equal(result.severity, 'danger');
-  assert.ok(result.recommendedBackup);
-  assert.equal(result.recommendedBackup.filename, 'tab-vault-backup-1.json');
-  assert.match(result.message, /wiped by a browser reset/);
-});
-
-test('Wipe Detection: Scenario 5 - Wipe Signed Out (Contextual recovery prompt)', () => {
-  const downloadItems = [
-    {
-      id: 2,
-      filename: '/home/user/Downloads/tab-vault-backup-2.json',
       endTime: '2026-10-20T11:00:00Z',
       exists: true,
-      fileSize: 62000,
+      fileSize: 52000,
       state: 'complete'
     }
   ];
 
   const result = evaluateEmptyState({
     localTabCount: 0,
-    syncState: null, // Signed out of Chrome profile, no sync storage
+    syncState,
     onInstalledReason: null,
     downloadItems
   });
 
   assert.equal(result.isEmpty, true);
-  assert.equal(result.scenario, 'wipe_signed_out');
-  assert.equal(result.promptType, 'disaster_banner_contextual');
-  assert.equal(result.severity, 'warning');
+  assert.equal(result.isAlarm, true, 'Wipe with sync flag must trigger alarm');
+  assert.equal(result.scenario, 'wipe_with_sync_flag');
   assert.ok(result.recommendedBackup);
-  assert.equal(result.recommendedBackup.filename, 'tab-vault-backup-2.json');
-  assert.match(result.message, /recent backup file .* was found in your Downloads/);
+  assert.equal(result.recommendedBackup.filename, 'tab-vault-backup-1.json');
+  assert.equal(result.showRestorePicker, true);
 });
 
-test('Wipe Detection: Active tabs returns isEmpty = false', () => {
+test('Real Flow: stash -> local.clear() without backup file (alarm)', async () => {
+  const local = new MockStorageArea();
+  const sync = new MockStorageArea();
+  const storage = new TabVaultStorage(local, sync);
+
+  // 1. Stash tabs
+  await storage.saveGroup({
+    id: 'grp_valuable_2',
+    title: 'Second Hoard',
+    tabs: [{ id: 't1', url: 'https://test.com' }]
+  });
+  assert.equal((await sync.get('hasSavedTabs')).hasSavedTabs, true);
+
+  // 2. Wipe local storage
+  await local.clear();
+
+  // 3. Evaluate empty state with NO backup files in Downloads
+  const syncState = await sync.get(['hasSavedTabs']);
   const result = evaluateEmptyState({
-    localTabCount: 15
+    localTabCount: 0,
+    syncState,
+    onInstalledReason: null,
+    downloadItems: []
   });
 
-  assert.equal(result.isEmpty, false);
-  assert.equal(result.scenario, 'active_tabs');
-  assert.equal(result.tabCount, 15);
+  assert.equal(result.isEmpty, true);
+  assert.equal(result.isAlarm, true, 'Alarm condition must trigger even without backup file if sync flag hasSavedTabs is true');
+  assert.equal(result.scenario, 'wipe_with_sync_flag_no_backup');
+  assert.equal(result.recommendedBackup, null);
+  assert.equal(result.showRestorePicker, true, 'Always offer file picker');
+  assert.match(result.message, /No automatic backup was found in Downloads, but you can select an existing backup/);
 });

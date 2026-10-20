@@ -1,26 +1,38 @@
 /**
  * Tab Vault Service Worker (MV3)
  * Completely stateless background runner:
- * - Collapses tabs on extension icon click
- * - Schedules and handles debounced & daily auto-backups
- * - Excludes incognito tabs
+ * - Collapses tabs (skips pinned tabs and non-http(s) pages)
+ * - Supports real undo collapse that reopens tabs in window
+ * - Rebuilds index and purges expired trash on startup
+ * - Coordinates large backup Blob URLs with offscreen document
  */
 
-import { TabVaultStorage } from './src/storage.js';
+import { TabVaultStorage, rebuildIndexFromKeys, purgeExpiredTrash } from './src/storage.js';
 import { executeAutoBackup } from './src/backup.js';
+import { filterTabsForCollapse } from './src/collapse-filter.js';
 
-const storage = new TabVaultStorage(chrome.storage.local, chrome.storage.sync);
+const storage = typeof chrome !== 'undefined' && chrome.storage
+  ? new TabVaultStorage(chrome.storage.local, chrome.storage.sync)
+  : null;
 
 // Setup on install/startup
 chrome.runtime.onInstalled.addListener(async (details) => {
-  // Store install reason in local storage for empty-state detection
   await chrome.storage.local.set({
     onInstalledReason: details.reason,
     installedAt: Date.now()
   });
 
+  // Rebuild index and purge trash
+  await rebuildIndexFromKeys(chrome.storage.local).catch(() => {});
+  await purgeExpiredTrash(chrome.storage.local).catch(() => {});
+
   // Daily heartbeat backup alarm (every 24h = 1440 min)
   chrome.alarms.create('backup_daily', { periodInMinutes: 1440 });
+});
+
+chrome.runtime.onStartup.addListener(async () => {
+  await rebuildIndexFromKeys(chrome.storage.local).catch(() => {});
+  await purgeExpiredTrash(chrome.storage.local).catch(() => {});
 });
 
 // Alarm handler
@@ -37,24 +49,20 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 });
 
-// Icon click: collapse current window tabs into a new group
+// Action click: collapse current window tabs (skipping pinned and non-http(s))
 chrome.action.onClicked.addListener(async (currentTab) => {
   const currentWindow = await chrome.windows.getCurrent({ populate: true });
   const allTabs = currentWindow.tabs || [];
-
-  // Exclude tab-vault dashboard tab itself and internal chrome pages if desired
   const dashboardUrl = chrome.runtime.getURL('tab-vault.html');
-  const tabsToCollapse = allTabs.filter(tab => {
-    return !tab.url.startsWith(dashboardUrl) && !tab.url.startsWith('chrome://');
-  });
+
+  // Filter: skip pinned tabs AND skip non-http(s) pages
+  const tabsToCollapse = filterTabsForCollapse(allTabs, dashboardUrl);
 
   if (tabsToCollapse.length === 0) {
-    // Just open or focus existing dashboard
     await openOrFocusDashboard();
     return;
   }
 
-  // Create group payload
   const groupId = `grp_${Date.now()}`;
   const now = new Date();
   const title = `Tabs saved on ${now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} at ${now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
@@ -64,7 +72,7 @@ chrome.action.onClicked.addListener(async (currentTab) => {
     url: t.url,
     title: t.title || t.url,
     favIconUrl: t.favIconUrl || '',
-    pinned: t.pinned || false,
+    pinned: false,
     incognito: t.incognito || false,
     createdAt: Date.now()
   }));
@@ -79,7 +87,16 @@ chrome.action.onClicked.addListener(async (currentTab) => {
     tabs: tabsPayload
   });
 
-  // Debounce backup (runs 5 mins after tab changes, or immediately can be tested)
+  // Store session for real undo
+  await chrome.storage.local.set({
+    lastCollapsedSession: {
+      groupId,
+      windowId: currentWindow.id,
+      tabs: tabsToCollapse.map(t => ({ url: t.url, title: t.title }))
+    }
+  });
+
+  // Debounce backup
   chrome.alarms.create('backup_debounce', { delayInMinutes: 5 });
 
   // Open dashboard tab
@@ -123,6 +140,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         await chrome.tabs.create({ url, active: false });
       }
       sendResponse({ success: true, count: urls.length });
+    })().catch(err => sendResponse({ success: false, error: err.message }));
+    return true;
+  }
+
+  if (message.action === 'undoCollapse') {
+    (async () => {
+      const { lastCollapsedSession } = await chrome.storage.local.get(['lastCollapsedSession']);
+      if (!lastCollapsedSession) {
+        return sendResponse({ success: false, message: 'No collapse session to undo' });
+      }
+      // Reopen tabs in window
+      for (const t of lastCollapsedSession.tabs) {
+        await chrome.tabs.create({ url: t.url, windowId: lastCollapsedSession.windowId, active: false });
+      }
+      // Delete the created group
+      await storage.deleteGroup(lastCollapsedSession.groupId);
+      await chrome.storage.local.remove(['lastCollapsedSession']);
+      sendResponse({ success: true, count: lastCollapsedSession.tabs.length });
     })().catch(err => sendResponse({ success: false, error: err.message }));
     return true;
   }

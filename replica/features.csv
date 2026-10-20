@@ -1,21 +1,21 @@
 feature,area,priority,original,clone,notes
-Convert all tabs in current window into a list,toolbar action,must,yes,yes,Core one-click window tab consolidation
-Open or focus dashboard tab on tab conversion,toolbar action,must,yes,yes,Displays the saved tab list immediately
-Safe-by-default collapse with instant undo,toolbar action,must,no,partial,Collapse creates new group with 15s undo toast in dashboard
-Group tabs by capture session timestamp,tab dashboard,must,yes,yes,Shows capture date/time and item count
-Display favicon and page title and URL for each tab,tab dashboard,must,yes,yes,Visual list item with link to original page
-Click tab item to restore in browser,tab dashboard,must,yes,yes,Reopens URL in browser tab and removes from group
-Delete individual tab item from group,tab dashboard,must,yes,yes,Removes single link from list
-Restore all tabs in group,tab dashboard,must,yes,yes,Batch reopens every link in the group
-Delete all tabs in group with confirmation,tab dashboard,must,yes,yes,Deletes whole group to trash with undo toast
-Trash bin with 30-day retention and instant undo for deleted tabs and groups,tab dashboard,must,no,yes,DIFFERENTIATOR: Soft-delete trash bin with 30-day retention and 1-click undo for accidental tab or group deletions
+Convert all tabs in current window into a list,toolbar action,must,yes,partial,Core one-click window tab consolidation (unit tested; pending real Chrome user verification)
+Open or focus dashboard tab on tab conversion,toolbar action,must,yes,partial,Displays the saved tab list immediately (unit tested; pending real Chrome user verification)
+Safe-by-default collapse with instant undo,toolbar action,must,no,partial,Collapse creates new group with 15s undo toast and window reopen in dashboard
+Group tabs by capture session timestamp,tab dashboard,must,yes,partial,Shows capture date/time and item count (unit tested; pending real Chrome user verification)
+Display favicon and page title and URL for each tab,tab dashboard,must,yes,partial,Visual list item with link to original page (unit tested; pending real Chrome user verification)
+Click tab item to restore in browser,tab dashboard,must,yes,partial,Reopens URL in browser tab and removes from group (unit tested; pending real Chrome user verification)
+Delete individual tab item from group,tab dashboard,must,yes,partial,Removes single link from list (unit tested; pending real Chrome user verification)
+Restore all tabs in group,tab dashboard,must,yes,partial,Batch reopens every link in the group (unit tested; pending real Chrome user verification)
+Delete all tabs in group with confirmation,tab dashboard,must,yes,partial,Deletes whole group to trash with undo toast (unit tested; pending real Chrome user verification)
+Trash bin with 30-day retention and instant undo for deleted tabs and groups,tab dashboard,must,no,partial,DIFFERENTIATOR: Soft-delete trash bin with 30-day retention and 1-click undo for accidental tab or group deletions
 Instant text search filter across titles and URLs,search & navigation,must,yes,no,Real-time search bar on dashboard
 Export tab groups as plain text list,import & export,must,yes,no,Formatted URL and title text export
 OneTab text-export importer,import & export,must,yes,no,OneTab compatible plain-text URL and title importer for seamless migration (originally: Import plain text list of URLs into new group)
-JSON export keeping group names notes and folders,import & export,must,no,yes,DIFFERENTIATOR: Full fidelity backup preserving group titles notes and folder structure
-Manifest V3 service worker architecture,runtime & storage,must,yes,yes,Service worker lifecycle and event handlers
-Offline local storage persistence,runtime & storage,must,yes,yes,Persistent local state using chrome.storage.local with granular keys and unlimitedStorage
-Auto-backup to Downloads plus wipe detection and restore,runtime & storage,must,no,yes,DIFFERENTIATOR: Scheduled JSON auto-export via chrome.alarms and chrome.downloads with startup wipe detection and 1-click restore
+JSON export keeping group names notes and folders,import & export,must,no,partial,DIFFERENTIATOR: Full fidelity backup preserving group titles notes and folder structure
+Manifest V3 service worker architecture,runtime & storage,must,yes,partial,Service worker lifecycle and event handlers (unit tested; pending real Chrome user verification)
+Offline local storage persistence,runtime & storage,must,yes,partial,Persistent local state using chrome.storage.local with granular keys and unlimitedStorage (unit tested)
+Auto-backup to Downloads plus wipe detection and restore,runtime & storage,must,no,partial,DIFFERENTIATOR: Scheduled JSON auto-export via chrome.alarms and chrome.downloads with startup wipe detection and 1-click restore
 Custom naming for tab groups,tab dashboard,should,yes,no,Allows editable title per group
 Lock tab group,tab dashboard,should,yes,no,Prevents group deletion and keeps links when restoring
 Star and pin tab group,tab dashboard,should,yes,no,Keeps priority groups at the top of the dashboard
@@ -24,7 +24,7 @@ Send only active tab to tab list,context menu,should,yes,no,Send individual tab 
 Copy group links to clipboard,import & export,should,yes,no,Quick copy of all URLs in a group
 Configurable restore window target,options & settings,should,yes,no,Option to restore in current window vs new window
 Configurable restore retention policy,options & settings,should,yes,no,Option to keep tabs in list vs remove when restored
-Pinned tabs exclusion rule,options & settings,should,yes,no,Keep pinned tabs open by default
+Pinned tabs exclusion rule,options & settings,should,yes,partial,Keep pinned tabs open by default (implemented in collapse-filter.js)
 Send all tabs to the left or right,context menu,should,yes,no,Directional tab consolidation
 Send all tabs in all windows,context menu,should,yes,no,Consolidate multi-window workspaces
 Exclude specified domain from tab capture,context menu,should,yes,no,Add current website to capture exclusion list
@@ -35,7 +35,7 @@ Keyboard shortcut to focus search bar,search & navigation,should,yes,no,Press / 
 Omnibox keyword search,search & navigation,should,yes,no,Type keyword in address bar to query saved tabs
 Duplicate URL handling option,options & settings,should,yes,no,Option to drop duplicate URLs when saving
 Startup behavior option,options & settings,should,yes,no,Option to open dashboard tab on browser launch
-Theme selection support,options & settings,should,yes,no,Light theme and dark theme support via tokens.css and theme toggle
+Theme selection support,options & settings,should,yes,partial,Light theme and dark theme support via tokens.css and theme toggle
 Incognito window tab capture support,runtime & storage,should,yes,no,Support private browsing windows when enabled
 Rolling in-extension snapshots,tab dashboard,could,no,no,DIFFERENTIATOR: Optional in-memory/storage rollback stack
 Lazy tab restore to prevent memory spikes,tab dashboard,could,no,no,DIFFERENTIATOR: Opens restored tabs in discarded state so 50+ tabs do not crash the browser

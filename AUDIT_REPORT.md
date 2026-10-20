@@ -84,3 +84,39 @@ This document maintains the chronological, cumulative audit history of the Tab V
   - Parity score stands at 36.1/100; 3 must-haves (search filter, text export, OneTab importer) remain for subsequent milestones.
 - **Next Recommended Actions**:
   - Apply the Milestone 1.5 fixes from git stash, resolve the non-reentrant mutex in `storage.js`, and execute the full test suite with `timeout 120 node --test tests/*.test.js`.
+
+---
+
+### [2026-10-20] Audit 04 — Milestone 1.5 Fixes & Stabilization
+- **Task**: Verify audit commit and safely resume Milestone 1.5 work from stash: resolve storage mutex deadlock, validate encoded URL lengths, handle two-way shrink baseline adjustment on tab restoration and undo, filter pinned/non-http tabs during collapse, implement real window reopen undo, hide development controls in production UI, update `features.csv` to `partial` pending manual verification in real Chrome, and execute full test suite.
+- **Verdict**: `PASS WITH WARNINGS` (Automated tests: 22 passed / 0 failed; warning: live browser-level verification in Chrome pending).
+- **Audit File**: [`replica/audit/04-milestone-1-5-fixes.md`](file:///replica/audit/04-milestone-1-5-fixes.md)
+- **Files Created / Modified**:
+  - `extension/src/collapse-filter.js` (Created tab filter utility)
+  - `tests/collapse.test.js` (Created filter unit tests)
+  - `extension/src/storage.js` (Decoupled unlocked save logic to eliminate mutex deadlock)
+  - `extension/src/backup.js` (Encoded URL length measurement, two-way baseline adjustment, download confirmation)
+  - `extension/background.js` (Integrated filter and collapse undo message dispatcher)
+  - `extension/tab-vault.html` (Added collapse undo banner, trash view, and hidden dev panel)
+  - `extension/tab-vault.js` (Removed inline onerror, implemented collapse undo, trash view, and two-way baseline)
+  - `extension/tab-vault.css` (Added trash view styling)
+  - `tests/storage.test.js` (Added concurrent restore/save deadlock regression test)
+  - `tests/backup.test.js` (Added encoded URL length expansion regression test)
+  - `replica/features.csv` (Set `clone=partial` for all unverified items pending real Chrome manual testing)
+  - `replica/audit/logs/04-tests.txt` (Automated test execution log: 22 passed, 0 failed)
+  - `replica/audit/logs/04-parity.txt` (Parity log: 20.5 / 100)
+  - `replica/audit/logs/04-contrast.txt` (Contrast log: 20 pairs passed)
+- **Quality & Health Checks Run**:
+  - **Automated Tests**: `timeout 120 node --test tests/*.test.js` $\rightarrow$ 22 passed, 0 failed (739ms).
+  - **Feature Parity**: `python3 parity.py replica/features.csv` $\rightarrow$ 20.5 / 100 (Unverified must-haves converted to `partial` per user instruction).
+  - **WCAG Contrast**: `python3 contrast.py replica/design/tokens.json` $\rightarrow$ 20 pairs checked, 0 failing AA.
+- **Distinction of Verification**:
+  - Automated tests verify unit logic, mock download flows, mutex concurrency, and filtering.
+  - Manual browser testing in real Chrome remains required for toolbar click behavior, actual Chrome download shelf verification, and DevTools console wipe simulation.
+- **Remaining Issues & Blockers**:
+  - Milestone 2 features (search filtering, plain text import/export) are not started.
+  - User verification in Chrome is pending.
+- **Next Recommended Actions**:
+  - User loads unpacked extension from `extension/` in Chrome and performs manual smoke tests.
+  - Update verified rows in `features.csv` to `yes`.
+  - Begin Milestone 2.
