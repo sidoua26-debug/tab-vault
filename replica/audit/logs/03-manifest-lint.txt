@@ -1,0 +1,17 @@
+=== Manifest Validation ===
+✓ Manifest V3 configuration valid and contains all required permissions.
+
+=== Extension File Seam Check ===
+✓ extension/manifest.json exists (707 bytes)
+✓ extension/background.js exists (4138 bytes)
+✓ extension/tab-vault.html exists (2245 bytes)
+✓ extension/tab-vault.js exists (9505 bytes)
+✓ extension/tab-vault.css exists (6115 bytes)
+✓ extension/tokens.css exists (2775 bytes)
+✓ extension/offscreen.html exists (183 bytes)
+✓ extension/offscreen.js exists (1075 bytes)
+✓ extension/src/storage.js exists (7761 bytes)
+✓ extension/src/backup.js exists (5933 bytes)
+✓ extension/src/wipe-detection.js exists (4876 bytes)
+
+All manifest and file seam checks PASSED.
