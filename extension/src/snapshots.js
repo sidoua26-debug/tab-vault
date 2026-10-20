@@ -65,15 +65,18 @@ export async function rollbackSnapshot(snapshotId, storage, storageArea = chrome
   // Create an automatic safety snapshot of current state before rolling back
   await createSnapshot(storage, storageArea, 'Pre-Rollback State');
 
-  // Clear existing groups from storage
-  const currentGroups = await storage.getAllGroups();
-  for (const g of currentGroups) {
-    await storage.deleteGroup(g.id);
-  }
-
-  // Restore snapshot groups
-  for (const group of target.groups) {
-    await storage.saveGroup(group);
+  // Replace active groups cleanly without trash pollution and sync baseline
+  if (typeof storage.replaceAllGroups === 'function') {
+    await storage.replaceAllGroups(target.groups);
+  } else {
+    // Fallback for older storage instances
+    const currentGroups = await storage.getAllGroups();
+    for (const g of currentGroups) {
+      await storage.deleteGroup(g.id);
+    }
+    for (const group of target.groups) {
+      await storage.saveGroup(group);
+    }
   }
 
   return true;

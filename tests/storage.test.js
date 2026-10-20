@@ -418,3 +418,134 @@ test('Storage Layer: regression - single-tab undo uses saveGroup without creatin
   assert.equal(dumpAfter['grp_session_123'].tabs.length, 2);
 });
 
+test('Storage Layer: removeRestoredTab decrements baseline, does NOT pollute trash, and respects group locking', async () => {
+  const local = new MockStorageArea();
+  const sync = new MockStorageArea();
+  const storage = new TabVaultStorage(local, sync);
+
+  // Group 1: Unlocked group with 2 tabs
+  await storage.saveGroup({
+    id: 'grp_unlocked',
+    title: 'Unlocked Group',
+    isLocked: false,
+    tabs: [
+      { id: 'tab_u1', title: 'U1', url: 'https://u1.com' },
+      { id: 'tab_u2', title: 'U2', url: 'https://u2.com' }
+    ]
+  });
+
+  // Group 2: Locked group with 1 tab
+  await storage.saveGroup({
+    id: 'grp_locked',
+    title: 'Locked Group',
+    isLocked: true,
+    tabs: [
+      { id: 'tab_l1', title: 'L1', url: 'https://l1.com' }
+    ]
+  });
+
+  // Set initial baseline
+  await local.set({ backup_state: { baselineTabCount: 3, lastKnownTabCount: 3 } });
+
+  // 1. Attempt removeRestoredTab on locked group -> must return null and keep tab
+  const lockedRes = await storage.removeRestoredTab('grp_locked', 'tab_l1');
+  assert.equal(lockedRes, null);
+  const lockedGroup = await storage.getGroup('grp_locked');
+  assert.equal(lockedGroup.tabs.length, 1);
+  let trash = await storage.getTrashBin();
+  assert.equal(trash.length, 0, 'Trash must remain empty');
+
+  // Baseline must not be changed
+  let state = (await local.get('backup_state')).backup_state;
+  assert.equal(state.baselineTabCount, 3);
+
+  // 2. removeRestoredTab on unlocked group tab 1
+  const u1Res = await storage.removeRestoredTab('grp_unlocked', 'tab_u1');
+  assert.ok(u1Res);
+  assert.equal(u1Res.tab.id, 'tab_u1');
+  assert.equal(u1Res.removedGroupId, null);
+
+  // Trash must still be empty!
+  trash = await storage.getTrashBin();
+  assert.equal(trash.length, 0, 'Trash must NOT be polluted by restored tab removal');
+
+  // Baseline must be decremented by 1
+  state = (await local.get('backup_state')).backup_state;
+  assert.equal(state.baselineTabCount, 2);
+
+  // 3. removeRestoredTab on remaining tab 2 (empties group -> group deleted)
+  const u2Res = await storage.removeRestoredTab('grp_unlocked', 'tab_u2');
+  assert.ok(u2Res);
+  assert.equal(u2Res.removedGroupId, 'unlocked');
+
+  // Group key and index updated
+  assert.equal(await storage.getGroup('grp_unlocked'), null);
+  const index = await storage.getGroupIndex();
+  assert.deepEqual(index, ['locked']);
+
+  // Trash remains empty
+  trash = await storage.getTrashBin();
+  assert.equal(trash.length, 0);
+
+  // Baseline decremented to 1
+  state = (await local.get('backup_state')).backup_state;
+  assert.equal(state.baselineTabCount, 1);
+});
+
+test('Storage Layer: replaceAllGroups replaces active groups cleanly without trash pollution and syncs baseline', async () => {
+  const local = new MockStorageArea();
+  const sync = new MockStorageArea();
+  const storage = new TabVaultStorage(local, sync);
+
+  // Existing state with 2 groups (3 tabs)
+  await storage.saveGroup({
+    id: 'grp_old1',
+    title: 'Old 1',
+    tabs: [{ id: 't_old1', title: 'Old 1', url: 'https://old1.com' }]
+  });
+  await storage.saveGroup({
+    id: 'grp_old2',
+    title: 'Old 2',
+    tabs: [
+      { id: 't_old2a', title: 'Old 2a', url: 'https://old2a.com' },
+      { id: 't_old2b', title: 'Old 2b', url: 'https://old2b.com' }
+    ]
+  });
+
+  assert.equal(await storage.getTotalTabCount(), 3);
+
+  // New groups to replace with (1 group with 2 tabs)
+  const replacementGroups = [
+    {
+      id: 'grp_new1',
+      title: 'New Snapshot Group',
+      tabs: [
+        { id: 't_new1', title: 'New 1', url: 'https://new1.com' },
+        { id: 't_new2', title: 'New 2', url: 'https://new2.com' }
+      ]
+    }
+  ];
+
+  await storage.replaceAllGroups(replacementGroups);
+
+  // Check active groups
+  const groups = await storage.getAllGroups();
+  assert.equal(groups.length, 1);
+  assert.equal(groups[0].id, 'new1');
+  assert.equal(groups[0].tabs.length, 2);
+
+  // Old groups removed
+  assert.equal(await storage.getGroup('grp_old1'), null);
+  assert.equal(await storage.getGroup('grp_old2'), null);
+
+  // Trash must NOT be populated
+  const trash = await storage.getTrashBin();
+  assert.equal(trash.length, 0, 'replaceAllGroups must not pollute trash bin');
+
+  // Baseline synchronized to new tab count (2)
+  const state = (await local.get('backup_state')).backup_state;
+  assert.equal(state.baselineTabCount, 2);
+  assert.equal(state.lastKnownTabCount, 2);
+});
+
+

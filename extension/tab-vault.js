@@ -21,7 +21,9 @@ import { exportToPlainText, parsePlainTextImport, deduplicateTabs, formatGroupUr
 import { getSettings, saveSettings } from './src/settings.js';
 import { createSnapshot, getSnapshots, rollbackSnapshot } from './src/snapshots.js';
 
-const storage = new TabVaultStorage(chrome.storage.local, chrome.storage.sync);
+const localArea = (typeof chrome !== 'undefined' && chrome.storage) ? chrome.storage.local : null;
+const syncArea = (typeof chrome !== 'undefined' && chrome.storage) ? chrome.storage.sync : null;
+const storage = new TabVaultStorage(localArea, syncArea);
 
 let lastDeletedAction = null; // { type: 'tab' | 'group' | 'batch', trashItem, payload, groupId }
 let toastTimeout = null;
@@ -329,9 +331,8 @@ function setupEventListeners() {
 
     if (settings.restoreRetentionPolicy === 'remove') {
       for (const item of items) {
-        await storage.deleteTab(item.groupId, item.tab.id);
+        await storage.removeRestoredTab(item.groupId, item.tab.id);
       }
-      await adjustBaseline(chrome.storage.local, -items.length);
     }
 
     selectedTabs.clear();
@@ -912,14 +913,13 @@ function renderGroups(container, groups) {
       });
     });
 
-    // Phase 1 Bug Fix: Click on .tab-link removes tab from unlocked group if retention is 'remove'
+    // Click on .tab-link removes tab from unlocked group if retention is 'remove' without polluting trash
     card.querySelectorAll('.tab-link').forEach(link => {
       link.addEventListener('click', async (e) => {
         const settings = await getSettings(chrome.storage.local);
         if (!group.isLocked && settings.restoreRetentionPolicy === 'remove') {
           const tId = link.getAttribute('data-tab-id');
-          await storage.deleteTab(group.id, tId);
-          await adjustBaseline(chrome.storage.local, -1);
+          await storage.removeRestoredTab(group.id, tId);
           setTimeout(renderDashboard, 100);
         }
       });
@@ -1042,9 +1042,8 @@ function renderGroups(container, groups) {
         lazy: settings.lazyRestore
       });
 
-      // If unlocked and retention is 'remove', remove group upon restore
+      // If unlocked and retention is 'remove', remove group upon restore (deleteGroup adjusts baseline)
       if (!group.isLocked && settings.restoreRetentionPolicy === 'remove') {
-        await adjustBaseline(chrome.storage.local, -count);
         await storage.deleteGroup(group.id);
         await renderDashboard();
       } else {

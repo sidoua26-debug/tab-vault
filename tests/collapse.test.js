@@ -19,3 +19,21 @@ test('Collapse Filter: skips pinned tabs and non-http(s) pages', () => {
   assert.equal(filtered[0].id, 1);
   assert.equal(filtered[1].id, 6);
 });
+
+test('Collapse Filter: respects allowIncognito parameter', () => {
+  const tabs = [
+    { id: 101, title: 'Normal Page', url: 'https://news.com', incognito: false },
+    { id: 102, title: 'Private Page', url: 'https://secret.com', incognito: true }
+  ];
+
+  // Default: allowIncognito = false
+  const defaultFiltered = filterTabsForCollapse(tabs, '');
+  assert.equal(defaultFiltered.length, 1);
+  assert.equal(defaultFiltered[0].id, 101);
+
+  // allowIncognito = true
+  const incognitoAllowed = filterTabsForCollapse(tabs, '', true);
+  assert.equal(incognitoAllowed.length, 2);
+  assert.equal(incognitoAllowed[1].id, 102);
+});
+

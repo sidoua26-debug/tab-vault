@@ -83,11 +83,12 @@ async function stashTabsList(tabsToCollapse) {
 
   const settings = await getSettings(chrome.storage.local);
 
-  // Filter excluded domains
+  // Filter excluded domains and incognito tabs
   const { excludedDomains } = await chrome.storage.local.get(['excludedDomains']);
   const domainList = Array.isArray(excludedDomains) ? excludedDomains : [];
 
   let eligibleTabs = tabsToCollapse.filter(t => {
+    if (t.incognito && !settings.captureIncognito) return false;
     try {
       if (!t.url) return false;
       const host = new URL(t.url).hostname;

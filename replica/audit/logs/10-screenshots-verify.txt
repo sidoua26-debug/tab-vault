@@ -1,0 +1,20 @@
+========================================================================
+Tab Vault - Audit 10 Gold Master Promotional Screenshots & DOM Verification
+Browser: Chromium 155.0.8059.39 snap (--headless=new)
+========================================================================
+1. Seeded Test Groups into chrome.storage.local:
+   - Group 1: "Deep Learning & Agentic Systems Research" (4 tabs, Starred, Unlocked)
+   - Group 2: "Infrastructure & Release Operations" (3 tabs, Locked)
+   - Total tabs seeded: 7 (3 tabs starred)
+
+2. DOM Element Assertions on live chrome-extension://<id>/tab-vault.html:
+   - .group-card count: 2 (PASS)
+   - .quick-link-pill count: 3 (PASS)
+   - .tab-row count: 7 (PASS)
+   - Empty state banner: hidden (PASS)
+
+3. Promotional Screenshot Artifacts (Exact CWS standard 1280x800):
+   - dist/screenshots/tab-vault-light-1280x800.png: 1280x800 RGB PNG, 78 KB
+   - dist/screenshots/tab-vault-dark-1280x800.png:  1280x800 RGB PNG, 79 KB
+========================================================================
+Verdict: PASS - Screenshots render fully populated group cards and quick lists.

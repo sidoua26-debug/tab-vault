@@ -40,6 +40,11 @@ class MockVaultStorage {
     this.groups = this.groups.filter(g => g.id !== groupId);
     return true;
   }
+  async replaceAllGroups(newGroups) {
+    this.groups = JSON.parse(JSON.stringify(newGroups));
+    this.replacedAll = true;
+    return this.groups.map(g => g.id);
+  }
 }
 
 test('Snapshots: prunes ring buffer to MAX_SNAPSHOTS (5)', async () => {
@@ -79,4 +84,6 @@ test('Snapshots: rollbackSnapshot restores target state', async () => {
   assert.equal(restored.length, 1);
   assert.equal(restored[0].id, 'g1');
   assert.equal(restored[0].title, 'Initial State');
+  assert.equal(vaultStorage.replacedAll, true, 'Must delegate to replaceAllGroups');
 });
+

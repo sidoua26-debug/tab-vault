@@ -20,19 +20,17 @@ This document maintains the chronological, cumulative audit history of the Tab V
 
 ---
 
-## Project Status Scorecard (Reflects Latest Audit: Audit 09 / 2026-10-20)
+## Project Status Scorecard (Reflects Latest Audit: Audit 10 / 2026-10-20)
 
 | Milestone / Gate | Score / Count | Status | Notes |
 | :--- | :--- | :--- | :--- |
 | **Milestone 1, 1.5 & 2 Scope** | Storage, Disaster Recovery & Search | **Complete & Verified** | Storage layer, 3-file rotated auto-backup, key-order resilient atomic write, instant search, and plain-text OneTab import/export. |
-| **Milestone 3 Scope** | Full Parity & Final Production Polish | **Complete & Verified** | Omnibox keyword search (`tv`), options & settings drawer, multi-select batch actions, drag-and-drop reordering, quick list, and rolling snapshots. |
-| **Automated Tests** | 47 Passed / 0 Failed | **PASS** | Run via `timeout 120 node --test tests/*.test.js` ([log](file:///replica/audit/logs/09-tests.txt)). |
-| **Chromium Headless E2E** | All Checks Passed | **PASS** | Service worker boot, LevelDB storage seeding, snapshots, and 1280x800 store screenshots verified ([log](file:///replica/audit/logs/09-chromium-e2e.txt)). |
-| **WCAG Contrast** | 20 Pairs / 0 Failing AA | **PASS** | Light & dark theme tokens verified with `contrast.py` ([log](file:///replica/audit/logs/09-contrast.txt)). |
-| **Parity Score** | 100.0 / 100 | **PASS** | 100% of counted features completed (36 of 36 done) ([log](file:///replica/audit/logs/09-parity.txt)). |
-| **Release Bundle** | `dist/tab-vault-mv3-release.zip` | **READY** | Production 38 KB MV3 release package with 1280x800 screenshots and complete store listing. |
-
-
+| **Milestone 3 & Gold Master** | Full Parity & Pre-Publish Verification | **Complete & Verified** | 4 subtle runtime bugs resolved (clean restore without trash pollution, incognito filter, clean snapshot rollback, storage init guard); live Chromium DOM verified with 2 groups & 3 quick links. |
+| **Automated Tests** | 50 Passed / 0 Failed | **PASS** | Run via `timeout 120 node --test tests/*.test.js` ([log](file:///replica/audit/logs/10-tests.txt)). |
+| **Chromium Headless E2E** | All Checks Passed | **PASS** | Live DOM verified (`.group-card` = 2, `.quick-link-pill` = 3, `.tab-row` = 7); exact 1280x800 populated promotional screenshots captured ([log](file:///replica/audit/logs/10-screenshots-verify.txt)). |
+| **WCAG Contrast** | 20 Pairs / 0 Failing AA | **PASS** | Light & dark theme tokens verified with `contrast.py` ([log](file:///replica/audit/logs/10-contrast.txt)). |
+| **Parity Score** | 100.0 / 100 | **PASS** | 100% of counted features completed (36 of 36 done) ([log](file:///replica/audit/logs/10-parity.txt)). |
+| **Release Bundle** | `dist/tab-vault-mv3-release.zip` | **READY** | Production 38 KB MV3 release package with verified populated 1280x800 screenshots and complete store listing. |
 
 ---
 
@@ -250,3 +248,31 @@ This document maintains the chronological, cumulative audit history of the Tab V
   - **Chromium E2E & Screenshots**: Seeded data and captured `dist/screenshots/tab-vault-light-1280x800.png` and `dist/screenshots/tab-vault-dark-1280x800.png` ([`09-chromium-e2e.txt`](file:///replica/audit/logs/09-chromium-e2e.txt)).
 - **Release Package**: Built `dist/tab-vault-mv3-release.zip` (38 KB).
 - **Next Recommended Actions**: Submit release bundle and screenshots to the Chrome Web Store Developer Console.
+
+---
+
+### [2026-10-20] Audit 10 — Gold Master Pre-Publish Verification, Edge-Case Bug Fixes, and Populated CWS Screenshots
+- **Task**: Execute Gold Master Pre-Publish Verification & Bug Fix Pass: resolve 4 subtle edge-case bugs in Audit 09 code (single-tab & batch restore trash pollution and double-decrement, incognito filtering enforcement during collapse, snapshot rollback trash pollution and baseline desync, storage init guard), verify live populated Chromium DOM, capture 1280x800 CWS promotional screenshots displaying 2 groups and 3 quick links, expand unit tests (50+ passing), verify 100/100 parity and 20/20 contrast, and rebuild production ZIP.
+- **Verdict**: `PASS` (50 passing automated tests, 100/100 parity, 0 failing contrast pairs, live Chromium DOM verified with 2 groups & 3 quick links, and 1280x800 populated promotional screenshots captured).
+- **Audit File**: [`replica/audit/10-gold-master-release.md`](file:///replica/audit/10-gold-master-release.md)
+- **Features & Bug Fixes Implemented**:
+  - `extension/src/storage.js`:
+    - Added `removeRestoredTab(groupId, tabId)`: checks `!group.isLocked`, removes tab, removes group if empty, decrements baseline by 1 exactly once, and never writes to `trash_bin`.
+    - Added `replaceAllGroups(newGroups)`: atomically updates `grp_<id>` keys and `group_index` without trash pollution, and sets `baselineTabCount` directly to the new total tab count.
+  - `extension/src/collapse-filter.js` & `extension/background.js`:
+    - Added `allowIncognito` parameter to `filterTabsForCollapse`.
+    - Enforced `captureIncognito` check in `background.js` `stashTabsList`.
+  - `extension/src/snapshots.js`:
+    - Updated `rollbackSnapshot` to invoke `storage.replaceAllGroups(target.groups)` instead of calling `storage.deleteGroup(g.id)` into trash.
+  - `extension/tab-vault.js`:
+    - Replaced `deleteTab` in single-tab click handler and `btnBatchRestore` with `storage.removeRestoredTab(groupId, tabId)`.
+    - Removed redundant double `adjustBaseline` calls.
+    - Guarded `TabVaultStorage` instantiation against uninitialized or delayed `chrome.storage`.
+- **Verification Evidence**:
+  - **Automated Tests**: 50 passed, 0 failed, 0 skipped ([`10-tests.txt`](file:///replica/audit/logs/10-tests.txt)).
+  - **Parity Score**: 100.0 / 100 (36 of 36 counted features complete) ([`10-parity.txt`](file:///replica/audit/logs/10-parity.txt)).
+  - **WCAG Contrast**: 20 pairs checked, 0 failing AA ([`10-contrast.txt`](file:///replica/audit/logs/10-contrast.txt)).
+  - **Headless Chromium DOM & Visual Verification**: Live verification in Chromium 155 snap asserting `.group-card` = 2, `.quick-link-pill` = 3, `.tab-row` = 7, and empty state banner hidden. Captured exact 1280x800 Light and Dark screenshots ([`10-screenshots-verify.txt`](file:///replica/audit/logs/10-screenshots-verify.txt)).
+- **Release Package**: Rebuilt production package `dist/tab-vault-mv3-release.zip` (38 KB, 22 files).
+- **Next Recommended Actions**: Extension is ready for 100% immediate upload to the Chrome Web Store Developer Console with assets in `dist/screenshots/` and copy from `STORE_LISTING.md`.
+

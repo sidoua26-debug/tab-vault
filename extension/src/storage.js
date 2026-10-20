@@ -352,6 +352,94 @@ export class TabVaultStorage {
   }
 
   /**
+   * Remove a restored tab without polluting the trash bin and decrement baseline once.
+   * If the group is locked, do nothing (tabs in locked groups cannot be removed via restore).
+   */
+  async removeRestoredTab(groupId, tabId) {
+    const area = this._requireLocal();
+    const cleanId = groupId.startsWith('grp_') ? groupId.slice(4) : groupId;
+
+    return await withGroupIndexLock(async () => {
+      const group = await this.getGroup(cleanId);
+      if (!group) return null;
+      if (group.isLocked) return null; // Locked groups retain their tabs
+
+      const tabIndex = group.tabs.findIndex(t => t.id === tabId);
+      if (tabIndex === -1) return null;
+
+      const [removedTab] = group.tabs.splice(tabIndex, 1);
+      // Lower baseline by 1 exactly once
+      await adjustBaseline(area, -1);
+
+      if (group.tabs.length === 0) {
+        const currentIndex = await this.getGroupIndex();
+        const newIndex = currentIndex.filter(id => id !== cleanId);
+        await area.set({ [GROUP_INDEX_KEY]: newIndex });
+        await area.remove([formatGroupKey(cleanId)]);
+      } else {
+        await area.set({ [formatGroupKey(cleanId)]: group });
+      }
+
+      await this._updateSyncMetadata();
+      return { tab: removedTab, removedGroupId: group.tabs.length === 0 ? cleanId : null };
+    });
+  }
+
+  /**
+   * Atomically replace all active groups (e.g. for snapshot rollback or full restore)
+   * without polluting the trash bin, and synchronize the shrink-guard baseline.
+   */
+  async replaceAllGroups(newGroups = []) {
+    const area = this._requireLocal();
+
+    return await withGroupIndexLock(async () => {
+      const oldIndex = await this.getGroupIndex();
+      const keysToRemove = oldIndex.map(id => formatGroupKey(id));
+
+      const newIndex = [];
+      const payload = {};
+      let totalTabs = 0;
+
+      for (const rawGroup of newGroups) {
+        if (!rawGroup || !rawGroup.id) continue;
+        const cleanId = rawGroup.id.startsWith('grp_') ? rawGroup.id.slice(4) : rawGroup.id;
+        const groupObj = {
+          ...rawGroup,
+          id: cleanId,
+          tabs: Array.isArray(rawGroup.tabs) ? rawGroup.tabs : [],
+          createdAt: rawGroup.createdAt || Date.now(),
+          updatedAt: Date.now()
+        };
+        const key = formatGroupKey(cleanId);
+        payload[key] = groupObj;
+        newIndex.push(cleanId);
+        totalTabs += groupObj.tabs.length;
+      }
+
+      // Remove keys that are not in the new groups
+      const keysToDelete = keysToRemove.filter(k => !Object.prototype.hasOwnProperty.call(payload, k));
+      if (keysToDelete.length > 0) {
+        await area.remove(keysToDelete);
+      }
+
+      payload[GROUP_INDEX_KEY] = newIndex;
+
+      // Update baseline directly to match the new total tab count
+      const res = await area.get([BACKUP_STATE_KEY]);
+      const state = res[BACKUP_STATE_KEY] || {};
+      payload[BACKUP_STATE_KEY] = {
+        ...state,
+        baselineTabCount: totalTabs,
+        lastKnownTabCount: totalTabs
+      };
+
+      await area.set(payload);
+      await this._updateSyncMetadata();
+      return newIndex;
+    });
+  }
+
+  /**
    * Restore an item from the trash bin
    */
   async restoreTrashItem(trashId) {
