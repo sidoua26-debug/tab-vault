@@ -20,7 +20,7 @@ This document maintains the chronological, cumulative audit history of the Tab V
 
 ---
 
-## Project Status Scorecard (Reflects Latest Audit: Audit 05 / 2026-10-20)
+## Project Status Scorecard (Reflects Latest Audit: Audit 06 / 2026-10-20)
 
 | Milestone / Gate | Score / Count | Status | Notes |
 | :--- | :--- | :--- | :--- |
@@ -148,3 +148,31 @@ This document maintains the chronological, cumulative audit history of the Tab V
   - User performs manual verification in Chrome following the 4-step checklist.
   - Promote verified rows in `features.csv` to `clone=yes`.
   - Begin Milestone 2.
+
+---
+
+### [2026-10-20] Audit 06 — Environment Inspection, Automated Retest & Chrome Manual Verification Plan
+- **Task**: Prepare and verify Milestone 1.5 in Chrome: inspect execution environment for browser and automation capabilities, verify extension codebase and controls against checklist requirements, rerun automated test suite (22 tests), feature parity (20.5/100), and WCAG contrast (20 pairs passing AA), formulate a comprehensive, non-destructive manual Chrome verification test plan using isolated test profiles, and document audit records.
+- **Verdict**: `PASS WITH WARNINGS` (Automated suite 100% green; real browser verification labeled `MANUAL VERIFICATION REQUIRED` due to lack of browser automation framework in environment).
+- **Audit File**: [`replica/audit/06-chrome-verification-prep.md`](file:///replica/audit/06-chrome-verification-prep.md)
+- **Files Created / Modified**:
+  - `AUDIT_REPORT.md` (Updated scorecard header and appended Audit 06 history entry)
+  - `replica/audit/06-chrome-verification-prep.md` (Created task audit report)
+  - `replica/audit/logs/06-tests.txt` (Automated test log: 22 passed, 0 failed, 514ms)
+  - `replica/audit/logs/06-parity.txt` (Parity verification log: 20.5 / 100)
+  - `replica/audit/logs/06-contrast.txt` (Contrast verification log: 20 pairs passed, 0 failing AA)
+- **Quality & Health Checks Run**:
+  - **Environment Check**: Confirmed `/snap/bin/chromium` is installed (Chromium 155.0.8059.39 snap), but no browser automation framework (Puppeteer, Playwright) is configured to simulate Chrome toolbar button clicks or extension shelf downloads.
+  - **Automated Tests**: `timeout 120 node --test tests/*.test.js` $\rightarrow$ 22 passed, 0 failed, duration 514ms ([`06-tests.txt`](file:///replica/audit/logs/06-tests.txt)).
+  - **Feature Parity**: `python3 parity.py replica/features.csv` $\rightarrow$ 20.5 / 100 ([`06-parity.txt`](file:///replica/audit/logs/06-parity.txt)). Honest assessment maintained (`clone=partial` for all 10 unverified must-haves).
+  - **WCAG Contrast**: `python3 contrast.py replica/design/tokens.json` $\rightarrow$ 20 pairs checked, 0 failing AA ([`06-contrast.txt`](file:///replica/audit/logs/06-contrast.txt)).
+- **Distinction of Verification**:
+  - **Automated Verification (PASS)**: All 22 tests pass. All logic, atomic operations, filters, and baseline calculations are verified.
+  - **Manual Browser Verification (REQUIRED)**: Real-browser smoke test plan generated for the user using an isolated disposable user profile (`--user-data-dir=/tmp/tab-vault-test-profile`) to protect personal data.
+- **Remaining Issues & Blockers**:
+  - Manual browser testing in Chrome required from user.
+  - Milestone 2 remains blocked until manual verification is completed.
+- **Next Recommended Actions**:
+  - User executes the 6-step safe test plan in Chrome with a disposable profile.
+  - Upon user confirmation of results, update `replica/features.csv` and begin Milestone 2.
+

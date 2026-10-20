@@ -1,0 +1,30 @@
+✔ Backup Module: slot calculation and filename rotation (4.601689ms)
+✔ Backup Module: sanitizeGroupsForBackup excludes incognito tabs (0.799908ms)
+✔ Backup Module: Empty Guard aborts when tabs count is 0 (1.328327ms)
+✔ Backup Module: Shrink Guard blocks backup if tabs drop > 50% (4.68977ms)
+✔ Backup Module: In-app removals lower baseline, undo raises baseline, and restore a 100-tab group allows backup to succeed (6.897156ms)
+✔ Backup Module: Encoded URL length check triggers offscreen Blob URL creation (332.505484ms)
+✔ Backup Module: backup_state updated ONLY after download complete; on failure state kept and lastError recorded (0.971911ms)
+✔ Backup Module: regression - encoded URL length measurement accounts for URI encoding expansion (42.527869ms)
+✔ Collapse Filter: skips pinned tabs and non-http(s) pages (1.197863ms)
+✔ Storage Layer: formatGroupKey (2.110913ms)
+✔ Storage Layer: writeNewVerifySwap atomic workflow (11.621905ms)
+✔ Storage Layer: writeNewVerifySwap aborts on corruption during staging (0.898814ms)
+✔ Storage Layer: parallel saveGroup calls serialized without race conditions (17.495432ms)
+✔ Storage Layer: rebuildIndexFromKeys reconstructs group_index from grp_* keys (0.744324ms)
+✔ Storage Layer: 30-day trash purge cleans expired items on startup (0.883085ms)
+✔ Storage Layer: soft-delete, undo, and restore from trash bin (4.995635ms)
+✔ Storage Layer: regression - concurrent restore and save operations do not deadlock (3.833229ms)
+✔ Wipe Detection: findRecommendedBackup selection logic (2.533023ms)
+✔ Real Flow: stash -> restore all -> empty (no alarm) (4.29285ms)
+✔ Real Flow: stash -> delete all -> empty (no alarm) (0.962994ms)
+✔ Real Flow: stash -> local.clear() with backup file (alarm) (1.116631ms)
+✔ Real Flow: stash -> local.clear() without backup file (alarm) (5.823596ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 514.202961
