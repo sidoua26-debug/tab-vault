@@ -40,12 +40,27 @@ Built from the ground up for modern Chrome Manifest V3, Tab Vault introduces def
 
 ---
 
-## 3. Promotional Screenshots (1280x800)
+## 3. Visual Assets & Promotional Materials
+
+### A. Chrome Web Store Screenshots (1280x800 PNG)
 Available in [`dist/screenshots/`](file:///dist/screenshots/):
-1. **Light Theme Dashboard**: `dist/screenshots/tab-vault-light-1280x800.png` — Shows active session groups, Quick List starred items, search bar, and batch controls in high-contrast light mode.
-2. **Dark Theme Dashboard**: `dist/screenshots/tab-vault-dark-1280x800.png` — Shows the same rich dashboard state rendered in native dark theme.
-3. **Settings & Preferences Drawer**: `dist/screenshots/tab-vault-settings-1280x800.png` — Shows configurable restore targets, deduplication, lazy restore, startup options, and storage repair tools.
-4. **Rolling Snapshots Drawer**: `dist/screenshots/tab-vault-snapshots-1280x800.png` — Shows 5-state safety snapshots with timestamps, group/tab tallies, manual snapshots, and 1-click state rollback.
+1. **Hero — One-Click Stash & 95% RAM Reduction**: `dist/screenshots/store-screenshot-1-hero-collapse.png` (alias: `tab-vault-light-1280x800.png`) — Declutter 50+ tabs in 1 click into organized session groups with instant RAM reclamation.
+2. **Disaster Recovery & Rolling Snapshots**: `dist/screenshots/store-screenshot-2-disaster-recovery.png` (alias: `tab-vault-snapshots-1280x800.png`) — 5-state rolling safety snapshots, automated Downloads backup rotation, and 1-click state rollback.
+3. **Instant Search & Omnibox Keyword**: `dist/screenshots/store-screenshot-3-instant-search.png` — Address bar `tv <query>` real-time suggestions and in-app `/` instant search across thousands of tabs.
+4. **Power Organization & Drag-and-Drop Control**: `dist/screenshots/store-screenshot-4-batch-organize.png` — Multi-select batch actions, drag-to-split collections, starred Quick Lists, and 30-day soft trash.
+5. **100% Local Privacy & Dual Themes**: `dist/screenshots/store-screenshot-5-privacy-themes.png` (alias: `tab-vault-dark-1280x800.png`) — Split light/dark showcase with 100% WCAG AA contrast certification and zero telemetry.
+6. **Precision Settings & Self-Healing Diagnostics**: `dist/screenshots/store-screenshot-6-power-settings.png` (alias: `tab-vault-settings-1280x800.png`) — Restore targets, deduplication, lazy restore, and 1-click storage repair.
+
+### B. Promotional Tiles & Banners
+Available in [`dist/promo/`](file:///dist/promo/):
+1. **Small Promo Tile (440x280 PNG)**: `dist/promo/tab-vault-small-promo-440x280.png` — High-impact card for Chrome Web Store search and category listings.
+2. **Marquee Promo Banner (1400x560 PNG)**: `dist/promo/tab-vault-marquee-promo-1400x560.png` — Panoramic hero banner for featured homepage placement.
+
+### C. Brand & Extension Icons
+Available in [`dist/brand-assets/`](file:///dist/brand-assets/) and [`extension/icons/`](file:///extension/icons/):
+1. **Master Vector Logo**: `dist/brand-assets/tab-vault-master-512.svg` & `tab-vault-icon-512.png`
+2. **Monochrome Vector Mark**: `dist/brand-assets/tab-vault-monochrome.svg`
+3. **Optimized Extension Icons**: `16x16`, `32x32`, `48x48`, `128x128`, `256x256`, `512x512`
 
 ---
 

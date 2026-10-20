@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="bgSm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284C7" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+  <!-- Rounded Base Squircle -->
+  <rect x="1" y="1" width="46" height="46" rx="11" fill="#0B0F19" stroke="#38BDF8" stroke-width="2" />
+  
+  <!-- Back Tab Layer -->
+  <path d="M12 14 C12 12 13 11 15 11 L33 11 C35 11 36 12 36 14 L36 17 L12 17 Z" fill="#38BDF8" opacity="0.5" />
+  
+  <!-- Main Front Tab Container -->
+  <rect x="7" y="16" width="34" height="25" rx="5" fill="url(#bgSm)" stroke="#60A5FA" stroke-width="1.5" />
+  
+  <!-- Bold Circular Vault Lock -->
+  <circle cx="24" cy="28.5" r="8" fill="#0B0F19" stroke="#FFFFFF" stroke-width="2.5" />
+  
+  <!-- Vault Wheel Cross Notches -->
+  <rect x="23" y="18.5" width="2" height="4" rx="1" fill="#FFFFFF" />
+  <rect x="23" y="34.5" width="2" height="4" rx="1" fill="#FFFFFF" />
+  <rect x="14" y="27.5" width="4" height="2" rx="1" fill="#FFFFFF" />
+  <rect x="30" y="27.5" width="4" height="2" rx="1" fill="#FFFFFF" />
+  
+  <!-- Central Glowing Pip -->
+  <circle cx="24" cy="28.5" r="3" fill="#38BDF8" />
+</svg>

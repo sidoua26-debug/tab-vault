@@ -33,3 +33,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Lazy tab restore to prevent browser freezing during massive batch restores.
 - **Accessible Dual Theme**: Native Light and Dark themes with 100% WCAG AA contrast compliance (20/20 verified pairs).
 - **Automated CI & Real-Browser E2E Harness**: Comprehensive test suite with 56 unit tests, Puppeteer headless Chromium E2E verification, and sub-100ms 500-tab benchmark.
+- **Professional Chrome Web Store Brand & Marketing Suite**: Complete visual redesign including master vector logo and micro-optimized toolbar icons (16/32/48/128/256/512), 6 benefit-driven 1280x800 marketing screenshots with authentic UI mockups, 440x280 small promo tile, and 1400x560 marquee promo banner.

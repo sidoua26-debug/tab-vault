@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Layer 1: Back Tab -->
+  <path d="M152 144 C152 130 163 120 178 120 L334 120 C349 120 360 130 360 144 L360 176 L152 176 Z" fill="#FFFFFF" opacity="0.35" />
+  
+  <!-- Layer 2: Middle Tab -->
+  <path d="M128 184 C128 170 139 160 154 160 L358 160 C373 160 384 170 384 184 L384 216 L128 216 Z" fill="#FFFFFF" opacity="0.65" />
+
+  <!-- Layer 3: Front Primary Vault Safe Container -->
+  <path d="M104 228 C104 210 118 196 136 196 L248 196 C258 196 266 202 272 210 L286 228 L376 228 C394 228 408 242 408 260 L408 392 C408 410 394 424 376 424 L136 424 C118 424 104 410 104 392 Z" 
+        fill="#FFFFFF" />
+
+  <!-- Inner Vault Door Cavity (Knocked Out) -->
+  <circle cx="256" cy="326" r="72" fill="#000000" />
+
+  <!-- Vault Wheel 3-Spoke Handle -->
+  <rect x="251" y="258" width="10" height="26" rx="5" fill="#FFFFFF" />
+  <rect x="251" y="258" width="10" height="26" rx="5" fill="#FFFFFF" transform="rotate(120 256 326)" />
+  <rect x="251" y="258" width="10" height="26" rx="5" fill="#FFFFFF" transform="rotate(240 256 326)" />
+
+  <!-- Center Hub -->
+  <circle cx="256" cy="326" r="32" fill="#FFFFFF" />
+  <circle cx="256" cy="326" r="16" fill="#000000" />
+  <circle cx="256" cy="326" r="6" fill="#FFFFFF" />
+</svg>
