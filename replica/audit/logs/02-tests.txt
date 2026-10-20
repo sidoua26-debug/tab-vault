@@ -1,0 +1,26 @@
+✔ Backup Module: slot calculation and filename rotation (15.487852ms)
+✔ Backup Module: sanitizeGroupsForBackup excludes incognito tabs (0.814762ms)
+✔ Backup Module: Empty Guard aborts when tabs count is 0 (2.391539ms)
+✔ Backup Module: Shrink Guard blocks backup if tabs drop > 50% (3.554676ms)
+✔ Backup Module: In-app deletes lower baseline and prevent shrink guard false alarm (8.214773ms)
+✔ Backup Module: 3-file rotation sequence (1 -> 2 -> 3 -> 1) (4.494015ms)
+✔ Backup Module: 20,000 tabs stress test triggers offscreen fallback (1114.548954ms)
+✔ Storage Layer: formatGroupKey (5.621202ms)
+✔ Storage Layer: writeNewVerifySwap atomic workflow (3.178019ms)
+✔ Storage Layer: writeNewVerifySwap aborts on corruption during staging (4.121991ms)
+✔ Storage Layer: per-group keys and index lifecycle (16.554479ms)
+✔ Wipe Detection: findRecommendedBackup selection logic (5.359222ms)
+✔ Wipe Detection: Scenario 1 - Fresh Install (1.479013ms)
+✔ Wipe Detection: Scenario 2 - Second Device (sync flag set, onInstalled reason=install) (1.547321ms)
+✔ Wipe Detection: Scenario 3 - Deliberate Clear (1.131753ms)
+✔ Wipe Detection: Scenario 4 - Wipe with Sync Flag (High confidence disaster banner) (1.3218ms)
+✔ Wipe Detection: Scenario 5 - Wipe Signed Out (Contextual recovery prompt) (1.178061ms)
+✔ Wipe Detection: Active tabs returns isEmpty = false (1.453767ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1550.42812

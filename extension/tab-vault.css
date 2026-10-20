@@ -1,0 +1,317 @@
+/* Tab Vault Dashboard Styling */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--type-base-size);
+  line-height: var(--type-base-line);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  min-height: 100vh;
+}
+
+.app-layout {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6);
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--density-header-height);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-2);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.brand-icon {
+  border-radius: var(--radius-sm);
+}
+
+.brand-title {
+  font-size: var(--type-lg-size);
+  font-weight: var(--type-lg-weight);
+  color: var(--color-text);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Button Primitives */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--motion-fast), border-color var(--motion-fast);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-sm {
+  height: 26px;
+  padding: 0 var(--space-3);
+  font-size: var(--type-sm-size);
+}
+
+.btn-primary {
+  background-color: var(--color-accent);
+  color: var(--color-on-accent);
+  border: 1px solid var(--color-accent);
+}
+
+.btn-primary:hover {
+  filter: brightness(0.95);
+}
+
+.btn-secondary {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-border);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid transparent;
+}
+
+.btn-ghost:hover {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+
+.btn-danger:hover {
+  background-color: var(--color-danger);
+  color: #ffffff;
+}
+
+/* Banner / Recovery Prompt */
+.banner {
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.banner-danger {
+  background-color: rgba(217, 48, 37, 0.08);
+  border: 1px solid var(--color-danger);
+}
+
+.banner-warning {
+  background-color: rgba(227, 116, 0, 0.08);
+  border: 1px solid var(--color-warning);
+}
+
+.banner-info {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.banner-title {
+  font-size: var(--type-md-size);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.banner-message {
+  font-size: var(--type-base-size);
+  color: var(--color-text);
+}
+
+.banner-hint {
+  font-size: var(--type-xs-size);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  background-color: var(--color-bg);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-border);
+}
+
+.banner-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+/* Tab Group Card */
+.group-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--density-group-gap);
+  background-color: var(--color-bg);
+  overflow: hidden;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.group-header-info {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.group-title {
+  font-size: var(--type-base-size);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.group-count {
+  font-size: var(--type-xs-size);
+  color: var(--color-text-muted);
+}
+
+.group-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Tab Rows (Dense 24px) */
+.group-tabs {
+  padding: var(--space-1) 0;
+}
+
+.tab-row {
+  display: flex;
+  align-items: center;
+  height: var(--density-row-height);
+  padding: 0 var(--space-4);
+  gap: var(--space-3);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: background-color var(--motion-fast);
+}
+
+.tab-row:hover {
+  background-color: var(--color-surface);
+}
+
+.tab-favicon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.tab-link {
+  flex: 1;
+  font-size: var(--type-base-size);
+  color: var(--color-accent);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tab-link:hover {
+  text-decoration: underline;
+}
+
+.tab-delete-btn {
+  opacity: 0;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 14px;
+  transition: opacity var(--motion-fast);
+}
+
+.tab-row:hover .tab-delete-btn {
+  opacity: 1;
+}
+
+.tab-delete-btn:hover {
+  color: var(--color-danger);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  background-color: var(--color-text);
+  color: var(--color-bg);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-toast);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--type-base-size);
+  z-index: 1000;
+}
+
+.toast.hidden {
+  display: none;
+}
+
+/* Testing Panel */
+.test-panel {
+  margin-top: var(--space-9);
+  padding: var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.test-panel-header {
+  font-size: var(--type-xs-size);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.test-panel-body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--type-sm-size);
+}

@@ -1,0 +1,64 @@
+Parity: 0.0 / 100
+
+features 0.0  (36 counted, must-haves 0 of 13 done)
+
+Not shippable yet: 13 must-have features are not done.
+
+By area, weakest first
+- toolbar action                 0.0  (2 features)
+- tab dashboard                  0.0  (14 features)
+- search & navigation            0.0  (3 features)
+- import & export                0.0  (3 features)
+- runtime & storage              0.0  (3 features)
+- context menu                   0.0  (5 features)
+- options & settings             0.0  (6 features)
+
+Missing, in build order
+- [must] import & export: Export tab groups as plain text list, no  (Formatted URL and title text export)
+- [must] import & export: OneTab text-export importer, no  (OneTab compatible plain-text URL and title importer for seamless migration (originally: Import plain text list of URLs into new group))
+- [must] runtime & storage: Manifest V3 service worker architecture, no  (Service worker lifecycle and event handlers)
+- [must] runtime & storage: Offline local storage persistence, no  (Persistent local state using chrome.storage.local)
+- [must] search & navigation: Instant text search filter across titles and URLs, no  (Real-time search bar on dashboard)
+- [must] tab dashboard: Click tab item to restore in browser, no  (Reopens URL in browser tab and removes from group)
+- [must] tab dashboard: Delete all tabs in group with confirmation, no  (Deletes whole group)
+- [must] tab dashboard: Delete individual tab item from group, no  (Removes single link from list)
+- [must] tab dashboard: Display favicon and page title and URL for each tab, no  (Visual list item with link to original page)
+- [must] tab dashboard: Group tabs by capture session timestamp, no  (Shows capture date/time and item count)
+- [must] tab dashboard: Restore all tabs in group, no  (Batch reopens every link in the group)
+- [must] toolbar action: Convert all tabs in current window into a list, no  (Core one-click window tab consolidation)
+- [must] toolbar action: Open or focus dashboard tab on tab conversion, no  (Displays the saved tab list immediately)
+- [should] context menu: Exclude specified domain from tab capture, no  (Add current website to capture exclusion list)
+- [should] context menu: Send all tabs in all windows, no  (Consolidate multi-window workspaces)
+- [should] context menu: Send all tabs in current window via context menu, no  (Right-click menu on any web page)
+- [should] context menu: Send all tabs to the left or right, no  (Directional tab consolidation)
+- [should] context menu: Send only active tab to tab list, no  (Send individual tab without affecting others)
+- [should] import & export: Copy group links to clipboard, no  (Quick copy of all URLs in a group)
+- [should] options & settings: Configurable restore retention policy, no  (Option to keep tabs in list vs remove when restored)
+- [should] options & settings: Configurable restore window target, no  (Option to restore in current window vs new window)
+- [should] options & settings: Duplicate URL handling option, no  (Option to drop duplicate URLs when saving)
+- [should] options & settings: Pinned tabs exclusion rule, no  (Keep pinned tabs open by default)
+- [should] options & settings: Startup behavior option, no  (Option to open dashboard tab on browser launch)
+- [should] options & settings: Theme selection support, no  (Light theme and dark theme support)
+- [should] runtime & storage: Incognito window tab capture support, no  (Support private browsing windows when enabled)
+- [should] search & navigation: Keyboard shortcut to focus search bar, no  (Press / key to jump to search input)
+- [should] search & navigation: Omnibox keyword search, no  (Type keyword in address bar to query saved tabs)
+- [should] tab dashboard: Custom naming for tab groups, no  (Allows editable title per group)
+- [should] tab dashboard: Drag and drop tab reordering, no  (Reorder tabs within and between groups)
+- [should] tab dashboard: Drag tab to empty area to create new group, no  (Split tabs into new custom group)
+- [should] tab dashboard: Lock tab group, no  (Prevents group deletion and keeps links when restoring)
+- [should] tab dashboard: Multi-select tabs for batch operations, no  (Select multiple items via checkboxes)
+- [should] tab dashboard: Star and pin tab group, no  (Keeps priority groups at the top of the dashboard)
+- [could] tab dashboard: Quick list pinned sidebar column, no  (Dedicated quick-access column for priority links)
+- [could] tab dashboard: Star individual tab items, no  (Mark important individual links)
+
+Left out on purpose (not scored)
+- Share group as public web page with QR code: Proprietary cloud hosting service; out of scope for local-first MV3 extension
+- Encrypted cloud sync between devices: Proprietary cloud sync backend; keep local-first or use file export/import
+
+Yours, not in the original (not scored)
+- Safe-by-default collapse with instant undo
+- Trash bin with 30-day retention and instant undo for deleted tabs and groups
+- JSON export keeping group names notes and folders
+- Auto-backup to Downloads plus wipe detection and restore
+- Rolling in-extension snapshots
+- Lazy tab restore to prevent memory spikes

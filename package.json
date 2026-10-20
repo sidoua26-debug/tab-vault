@@ -1,0 +1,12 @@
+{
+  "name": "tab-vault",
+  "version": "1.0.0",
+  "description": "Clean-room Manifest V3 OneTab rebuild with crash-proof local disaster recovery",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": ["chrome-extension", "tab-manager", "manifest-v3", "disaster-recovery"],
+  "author": "",
+  "license": "MIT"
+}

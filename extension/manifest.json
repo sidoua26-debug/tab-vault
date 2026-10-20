@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Vault",
+  "version": "1.0.0",
+  "description": "Clean-room Manifest V3 tab manager with defense-in-depth disaster recovery and auto-backup.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "unlimitedStorage",
+    "downloads",
+    "alarms",
+    "offscreen"
+  ],
+  "action": {
+    "default_title": "Tab Vault — Stash current window tabs",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

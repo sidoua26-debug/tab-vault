@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tab Vault</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="tab-vault.css">
+</head>
+<body>
+  <div class="app-layout">
+    <header class="app-header">
+      <div class="header-brand">
+        <img src="icons/icon48.png" width="20" height="20" alt="Tab Vault Logo" class="brand-icon">
+        <span class="brand-title">Tab Vault</span>
+      </div>
+      <div class="header-actions">
+        <button id="btnExport" class="btn btn-sm btn-secondary" title="Export backup to Downloads">Export Backup</button>
+        <button id="btnRestorePicker" class="btn btn-sm btn-secondary" title="Restore from backup file">Restore File...</button>
+        <input type="file" id="fileInput" accept=".json,.txt" style="display:none">
+        <button id="btnThemeToggle" class="btn btn-sm btn-ghost" title="Toggle Light/Dark Theme">🌓</button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- Disaster Recovery / Empty State Banner Container -->
+      <div id="bannerContainer"></div>
+
+      <!-- Tab Groups List Container -->
+      <div id="groupsList" class="groups-list"></div>
+
+      <!-- Testing / Wipe Simulation Toolbar (for testing milestone 1) -->
+      <section class="test-panel">
+        <div class="test-panel-header">Developer / QA Simulation Controls (Milestone 1)</div>
+        <div class="test-panel-body">
+          <span>Simulate local data loss to test disaster recovery:</span>
+          <button id="btnSimulateWipe" class="btn btn-sm btn-danger">Simulate Wipe (chrome.storage.local.clear())</button>
+          <button id="btnTriggerAutoBackup" class="btn btn-sm btn-secondary">Trigger Auto-Backup</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Floating Undo Toast -->
+    <div id="toast" class="toast hidden" role="status" aria-live="polite">
+      <span id="toastMessage"></span>
+      <button id="btnToastUndo" class="btn btn-sm btn-primary">Undo</button>
+      <button id="btnToastClose" class="btn btn-sm btn-ghost">✕</button>
+    </div>
+  </div>
+
+  <script type="module" src="tab-vault.js"></script>
+</body>
+</html>
