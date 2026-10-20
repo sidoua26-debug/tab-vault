@@ -20,17 +20,18 @@ This document maintains the chronological, cumulative audit history of the Tab V
 
 ---
 
-## Project Status Scorecard (Reflects Latest Audit: Audit 08 / 2026-10-20)
+## Project Status Scorecard (Reflects Latest Audit: Audit 09 / 2026-10-20)
 
 | Milestone / Gate | Score / Count | Status | Notes |
 | :--- | :--- | :--- | :--- |
-| **Milestone 1 & 1.5 Scope** | Core Storage & Disaster Recovery | **Complete & Verified** | Storage layer, 3-file rotated auto-backup, LevelDB key-order resilient atomic write, wipe detection, and backup restoration verified in real Chromium 155 SW. |
-| **Milestone 2 Scope** | Search, Import/Export, Context Menus | **Complete & Verified** | Instant search (`/` focus), OneTab plain-text import/export, group inline renaming, locking, star/pin, URL deduplication, and contextMenus. |
-| **Automated Tests** | 39 Passed / 0 Failed | **PASS** | Run via `timeout 120 node --test tests/*.test.js` ([log](file:///replica/audit/logs/08-tests.txt)). |
-| **Chromium LevelDB Verification** | All Checks Passed | **PASS** | Verified in real headless Chromium 155 LevelDB ([log](file:///replica/audit/logs/08-chromium-verification.txt)). |
-| **WCAG Contrast** | 20 Pairs / 0 Failing AA | **PASS** | Light & dark theme tokens verified with `contrast.py` ([log](file:///replica/audit/logs/08-contrast.txt)). |
-| **Parity Score** | 78.3 / 100 | **PASS** | 13 of 13 must-haves 100% completed ([log](file:///replica/audit/logs/08-parity.txt)). |
-| **Release Bundle** | `dist/tab-vault-mv3-release.zip` | **READY** | Production MV3 zip bundle built with clean manifest, zero inline handlers, and least-privilege justifications. |
+| **Milestone 1, 1.5 & 2 Scope** | Storage, Disaster Recovery & Search | **Complete & Verified** | Storage layer, 3-file rotated auto-backup, key-order resilient atomic write, instant search, and plain-text OneTab import/export. |
+| **Milestone 3 Scope** | Full Parity & Final Production Polish | **Complete & Verified** | Omnibox keyword search (`tv`), options & settings drawer, multi-select batch actions, drag-and-drop reordering, quick list, and rolling snapshots. |
+| **Automated Tests** | 47 Passed / 0 Failed | **PASS** | Run via `timeout 120 node --test tests/*.test.js` ([log](file:///replica/audit/logs/09-tests.txt)). |
+| **Chromium Headless E2E** | All Checks Passed | **PASS** | Service worker boot, LevelDB storage seeding, snapshots, and 1280x800 store screenshots verified ([log](file:///replica/audit/logs/09-chromium-e2e.txt)). |
+| **WCAG Contrast** | 20 Pairs / 0 Failing AA | **PASS** | Light & dark theme tokens verified with `contrast.py` ([log](file:///replica/audit/logs/09-contrast.txt)). |
+| **Parity Score** | 100.0 / 100 | **PASS** | 100% of counted features completed (36 of 36 done) ([log](file:///replica/audit/logs/09-parity.txt)). |
+| **Release Bundle** | `dist/tab-vault-mv3-release.zip` | **READY** | Production 38 KB MV3 release package with 1280x800 screenshots and complete store listing. |
+
 
 
 ---
@@ -226,3 +227,26 @@ This document maintains the chronological, cumulative audit history of the Tab V
   - **Release Artifacts**: Built production zip bundle at `dist/tab-vault-mv3-release.zip` (30 KB) and documented Web Store listing and least-privilege justifications in `STORE_LISTING.md`.
 - **Remaining Issues & Blockers**: None. System is 100% publish-ready.
 - **Next Recommended Actions**: Submit `dist/tab-vault-mv3-release.zip` and copy from `STORE_LISTING.md` to Chrome Web Store Developer Dashboard.
+
+---
+
+### [2026-10-20] Audit 09 — Bug Fixes, Full Parity Implementation (100/100), Headless E2E Verification & v1.0.0 Store Package
+- **Task**: Execute Milestone 3 & Final Production Polish: repair 3 subtle runtime bugs (single tab restore behavior, toast undo key formatting, duplicate URLs on capture/import), complete all remaining should and local-first could features (settings drawer, omnibox search, drag-and-drop tab reorder/split, multi-select batch actions, individual tab starring, quick list sidebar, rolling snapshots), verify E2E in real headless Chromium, generate 1280x800 store screenshots, and rebuild production release ZIP.
+- **Verdict**: `PASS` (All 47 automated tests pass, 100% feature parity reached, 0 failing contrast pairs, LevelDB storage verified in Chromium 155, and promotional store screenshots generated).
+- **Audit File**: [`replica/audit/09-full-parity-and-store-bundle.md`](file:///replica/audit/09-full-parity-and-store-bundle.md)
+- **Features Implemented & Verified**:
+  - `extension/src/settings.js`: Preferences module with `restoreWindowTarget` (`current` | `new`), `restoreRetentionPolicy` (`remove` | `keep`), `openOnStartup`, `deduplicateOnCapture`, `lazyRestore`, and `captureIncognito` options stored in `vault_settings`.
+  - `extension/src/snapshots.js`: Rolling snapshots ring buffer prunes to max 5 states with 1-click rollback before destructive operations.
+  - `extension/tab-vault.js` & `tab-vault.html`: Added Settings drawer, Snapshots modal drawer, Quick List pinned links header, multi-select checkboxes with floating batch action bar (Restore, Delete, Move to New Group), HTML5 drag-and-drop tab reordering, and "+ Drop here to create a new group" split dropzone.
+  - `extension/background.js` & `manifest.json`: Omnibox `tv` keyword suggestions and navigation, `openOnStartup` launch behavior, duplicate URL stripping on collapse/import, and lazy staggered restoration.
+- **Bug Fixes**:
+  - Clicking a single tab in an unlocked group now removes the tab if `restoreRetentionPolicy === 'remove'` and lowers the baseline.
+  - Toast undo for single tabs now calls `storage.saveGroup(group)` ensuring proper key formatting without `grp_grp_*` duplication.
+  - Incoming tabs on capture and text import are automatically deduplicated when `deduplicateOnCapture` is active.
+- **Verification Evidence**:
+  - **Automated Tests**: 47 passed, 0 failed, 0 skipped ([`09-tests.txt`](file:///replica/audit/logs/09-tests.txt)).
+  - **Parity Score**: 100.0 / 100 (36 of 36 counted features complete) ([`09-parity.txt`](file:///replica/audit/logs/09-parity.txt)).
+  - **WCAG Contrast**: 20 pairs checked, 0 failing AA ([`09-contrast.txt`](file:///replica/audit/logs/09-contrast.txt)).
+  - **Chromium E2E & Screenshots**: Seeded data and captured `dist/screenshots/tab-vault-light-1280x800.png` and `dist/screenshots/tab-vault-dark-1280x800.png` ([`09-chromium-e2e.txt`](file:///replica/audit/logs/09-chromium-e2e.txt)).
+- **Release Package**: Built `dist/tab-vault-mv3-release.zip` (38 KB).
+- **Next Recommended Actions**: Submit release bundle and screenshots to the Chrome Web Store Developer Console.

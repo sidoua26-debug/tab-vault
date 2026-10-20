@@ -5,7 +5,9 @@
  * - Supports real undo collapse that reopens tabs in window
  * - Rebuilds index and purges expired trash on startup
  * - Context menu integration for directional and selective collapse
- * - Keyboard commands handler
+ * - Omnibox keyword "tv" search integration
+ * - Lazy restore to prevent browser memory spikes
+ * - Startup behavior integration (openOnStartup)
  * - Coordinates large backup Blob URLs with offscreen document
  */
 
@@ -13,6 +15,9 @@ import { TabVaultStorage, rebuildIndexFromKeys, purgeExpiredTrash } from './src/
 import { executeAutoBackup } from './src/backup.js';
 import { filterTabsForCollapse } from './src/collapse-filter.js';
 import { setupContextMenus, handleContextMenuClick } from './src/context-menu.js';
+import { getSettings } from './src/settings.js';
+import { filterGroupsByQuery } from './src/search.js';
+import { deduplicateTabs } from './src/import-export.js';
 
 const storage = typeof chrome !== 'undefined' && chrome.storage
   ? new TabVaultStorage(chrome.storage.local, chrome.storage.sync)
@@ -44,6 +49,12 @@ chrome.runtime.onStartup.addListener(async () => {
   if (chrome.contextMenus) {
     setupContextMenus(chrome.contextMenus);
   }
+
+  // Check openOnStartup preference
+  const settings = await getSettings(chrome.storage.local);
+  if (settings.openOnStartup) {
+    await openOrFocusDashboard();
+  }
 });
 
 // Alarm handler
@@ -70,11 +81,13 @@ async function stashTabsList(tabsToCollapse) {
     return;
   }
 
+  const settings = await getSettings(chrome.storage.local);
+
   // Filter excluded domains
   const { excludedDomains } = await chrome.storage.local.get(['excludedDomains']);
   const domainList = Array.isArray(excludedDomains) ? excludedDomains : [];
 
-  const eligibleTabs = tabsToCollapse.filter(t => {
+  let eligibleTabs = tabsToCollapse.filter(t => {
     try {
       if (!t.url) return false;
       const host = new URL(t.url).hostname;
@@ -83,6 +96,11 @@ async function stashTabsList(tabsToCollapse) {
       return true;
     }
   });
+
+  // Optional duplicate URL handling on capture
+  if (settings.deduplicateOnCapture) {
+    eligibleTabs = deduplicateTabs(eligibleTabs);
+  }
 
   if (eligibleTabs.length === 0) {
     await openOrFocusDashboard();
@@ -100,6 +118,7 @@ async function stashTabsList(tabsToCollapse) {
     favIconUrl: t.favIconUrl || '',
     pinned: false,
     incognito: t.incognito || false,
+    isStarred: false,
     createdAt: Date.now()
   }));
 
@@ -152,6 +171,53 @@ if (chrome.commands) {
   });
 }
 
+// Omnibox keyword search ("tv <query>")
+if (chrome.omnibox) {
+  chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
+    if (!text.trim()) return;
+    try {
+      const groups = await storage.getAllGroups();
+      const filtered = filterGroupsByQuery(groups, text);
+      const suggestions = [];
+
+      for (const g of filtered) {
+        for (const t of (g.tabs || [])) {
+          suggestions.push({
+            content: t.url,
+            description: `${escapeXml(t.title || t.url)} <dim>- ${escapeXml(t.url)}</dim>`
+          });
+          if (suggestions.length >= 6) break;
+        }
+        if (suggestions.length >= 6) break;
+      }
+      suggest(suggestions);
+    } catch (_) {}
+  });
+
+  chrome.omnibox.onInputEntered.addListener(async (text, disposition) => {
+    if (text.startsWith('http://') || text.startsWith('https://')) {
+      if (disposition === 'currentTab') {
+        await chrome.tabs.update({ url: text });
+      } else {
+        await chrome.tabs.create({ url: text });
+      }
+    } else {
+      const searchUrl = chrome.runtime.getURL(`tab-vault.html?q=${encodeURIComponent(text)}`);
+      await chrome.tabs.create({ url: searchUrl });
+    }
+  });
+}
+
+function escapeXml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 // Context Menu listener
 if (chrome.contextMenus) {
   chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -199,8 +265,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'restoreTabs') {
     (async () => {
       const urls = message.urls || [];
-      for (const url of urls) {
-        await chrome.tabs.create({ url, active: false });
+      const inNewWindow = Boolean(message.newWindow);
+      const lazy = message.lazy !== false;
+
+      let targetWindowId = undefined;
+      if (inNewWindow) {
+        const newWin = await chrome.windows.create({ focused: true });
+        targetWindowId = newWin.id;
+      }
+
+      // Restore with lazy prevention of memory spikes
+      for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+        const createProps = {
+          url,
+          active: i === 0 && inNewWindow
+        };
+        if (targetWindowId !== undefined) {
+          createProps.windowId = targetWindowId;
+        }
+
+        await chrome.tabs.create(createProps);
+
+        // Stagger if large batch to prevent CPU / memory thrashing
+        if (lazy && urls.length > 10 && (i + 1) % 10 === 0) {
+          await new Promise(r => setTimeout(r, 150));
+        }
       }
       sendResponse({ success: true, count: urls.length });
     })().catch(err => sendResponse({ success: false, error: err.message }));

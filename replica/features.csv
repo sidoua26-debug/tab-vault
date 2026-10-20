@@ -4,7 +4,7 @@ Open or focus dashboard tab on tab conversion,toolbar action,must,yes,yes,Displa
 Safe-by-default collapse with instant undo,toolbar action,must,no,yes,Collapse creates new group with 15s undo toast and window reopen in dashboard
 Group tabs by capture session timestamp,tab dashboard,must,yes,yes,Shows capture date/time and item count (verified in Chromium 155 SW)
 Display favicon and page title and URL for each tab,tab dashboard,must,yes,yes,Visual list item with link to original page (verified in Chromium 155 SW)
-Click tab item to restore in browser,tab dashboard,must,yes,yes,Reopens URL in browser tab and removes from group (verified in Chromium 155 SW)
+Click tab item to restore in browser,tab dashboard,must,yes,yes,Reopens URL in browser tab and removes from group when unlocked (verified in Chromium 155 SW)
 Delete individual tab item from group,tab dashboard,must,yes,yes,Removes single link from list (verified in Chromium 155 SW)
 Restore all tabs in group,tab dashboard,must,yes,yes,Batch reopens every link in the group (verified in Chromium 155 SW)
 Delete all tabs in group with confirmation,tab dashboard,must,yes,yes,Deletes whole group to trash with undo toast (verified in Chromium 155 SW)
@@ -22,24 +22,24 @@ Star and pin tab group,tab dashboard,should,yes,yes,Keeps priority groups at the
 Send all tabs in current window via context menu,context menu,should,yes,yes,Right-click menu on any web page
 Send only active tab to tab list,context menu,should,yes,yes,Send individual tab without affecting others
 Copy group links to clipboard,import & export,should,yes,yes,Quick copy of all URLs in a group to clipboard
-Configurable restore window target,options & settings,should,yes,no,Option to restore in current window vs new window
-Configurable restore retention policy,options & settings,should,yes,no,Option to keep tabs in list vs remove when restored
+Configurable restore window target,options & settings,should,yes,yes,Option to restore in current window vs new window in vault_settings
+Configurable restore retention policy,options & settings,should,yes,yes,Option to keep tabs in list vs remove when restored in vault_settings
 Pinned tabs exclusion rule,options & settings,should,yes,yes,Keep pinned tabs open by default (implemented in collapse-filter.js)
 Send all tabs to the left or right,context menu,should,yes,yes,Directional tab consolidation via contextMenus
 Send all tabs in all windows,context menu,should,yes,yes,Consolidate multi-window workspaces via contextMenus
 Exclude specified domain from tab capture,context menu,should,yes,yes,Add current website to capture exclusion list via contextMenus
-Drag and drop tab reordering,tab dashboard,should,yes,no,Reorder tabs within and between groups
-Drag tab to empty area to create new group,tab dashboard,should,yes,no,Split tabs into new custom group
-Multi-select tabs for batch operations,tab dashboard,should,yes,no,Select multiple items via checkboxes
+Drag and drop tab reordering,tab dashboard,should,yes,yes,HTML5 drag and drop to reorder tabs within groups and move between groups
+Drag tab to empty area to create new group,tab dashboard,should,yes,yes,Split tabs into new custom group via dropzone
+Multi-select tabs for batch operations,tab dashboard,should,yes,yes,Select multiple items via checkboxes with batch restore delete and move
 Keyboard shortcut to focus search bar,search & navigation,should,yes,yes,Press / key or Ctrl+F to jump to search input; Esc to clear
-Omnibox keyword search,search & navigation,should,yes,no,Type keyword in address bar to query saved tabs
+Omnibox keyword search,search & navigation,should,yes,yes,Type keyword tv in address bar to query saved tabs
 Duplicate URL handling option,options & settings,should,yes,yes,Option to drop duplicate URLs when saving and 1-click global dedup button
-Startup behavior option,options & settings,should,yes,no,Option to open dashboard tab on browser launch
+Startup behavior option,options & settings,should,yes,yes,Option to open dashboard tab on browser launch via vault_settings
 Theme selection support,options & settings,should,yes,yes,Light theme and dark theme support via tokens.css and theme toggle
-Incognito window tab capture support,runtime & storage,should,yes,no,Support private browsing windows when enabled
-Rolling in-extension snapshots,tab dashboard,could,no,no,DIFFERENTIATOR: Optional in-memory/storage rollback stack
-Lazy tab restore to prevent memory spikes,tab dashboard,could,no,no,DIFFERENTIATOR: Opens restored tabs in discarded state so 50+ tabs do not crash the browser
-Star individual tab items,tab dashboard,could,yes,no,Mark important individual links
-Quick list pinned sidebar column,tab dashboard,could,yes,no,Dedicated quick-access column for priority links
+Incognito window tab capture support,runtime & storage,should,yes,yes,Support private browsing windows when enabled in vault_settings
+Rolling in-extension snapshots,tab dashboard,could,no,yes,DIFFERENTIATOR: In-extension ring-buffer rollback stack of last 5 states
+Lazy tab restore to prevent memory spikes,tab dashboard,could,no,yes,DIFFERENTIATOR: Staggered batch restoration preventing CPU/memory thrashing
+Star individual tab items,tab dashboard,could,yes,yes,Mark important individual links with star button
+Quick list pinned sidebar column,tab dashboard,could,yes,yes,Dedicated quick-access section for priority links
 Share group as public web page with QR code,import & export,could,yes,skip,Proprietary cloud hosting service; out of scope for local-first MV3 extension
 Encrypted cloud sync between devices,runtime & storage,could,yes,skip,Proprietary cloud sync backend; keep local-first or use file export/import

@@ -17,6 +17,8 @@
       <div class="header-actions">
         <button id="btnViewActive" class="btn btn-sm btn-secondary active-view-btn">Active Tabs</button>
         <button id="btnViewTrash" class="btn btn-sm btn-ghost">Trash (<span id="trashCount">0</span>)</button>
+        <button id="btnSnapshots" class="btn btn-sm btn-ghost" title="Rolling Snapshots">Snapshots</button>
+        <button id="btnSettings" class="btn btn-sm btn-ghost" title="Settings & Preferences">⚙ Settings</button>
         <button id="btnTextImportExport" class="btn btn-sm btn-secondary" title="Import or Export plain-text OneTab format">Import / Export</button>
         <button id="btnExport" class="btn btn-sm btn-secondary" title="Export JSON backup to Downloads">Export JSON</button>
         <button id="btnRestorePicker" class="btn btn-sm btn-secondary" title="Restore from backup file">Restore File...</button>
@@ -48,11 +50,36 @@
         </div>
       </div>
 
+      <!-- Quick List / Starred Links Section -->
+      <section id="quickListSection" class="quick-list-section hidden">
+        <div class="quick-list-header">
+          <span class="quick-list-title">★ Starred Quick List</span>
+          <span id="quickListCount" style="font-size: var(--type-xs-size); color: var(--color-text-muted);"></span>
+        </div>
+        <div id="quickListItems" class="quick-list-items"></div>
+      </section>
+
+      <!-- Batch Selection Action Bar -->
+      <div id="batchBar" class="batch-bar hidden">
+        <span id="batchCount">0 tabs selected</span>
+        <div class="batch-bar-actions">
+          <button id="btnBatchRestore" class="btn btn-sm btn-secondary">Restore Selected</button>
+          <button id="btnBatchMoveNew" class="btn btn-sm btn-secondary">Move to New Group</button>
+          <button id="btnBatchDelete" class="btn btn-sm btn-danger">Delete Selected</button>
+          <button id="btnBatchCancel" class="btn btn-sm btn-ghost">Deselect All</button>
+        </div>
+      </div>
+
       <!-- Disaster Recovery / Empty State Banner Container -->
       <div id="bannerContainer"></div>
 
       <!-- Tab Groups List Container (Active View) -->
       <div id="groupsList" class="groups-list"></div>
+
+      <!-- Dropzone to split dragged tab into a new group -->
+      <div id="newGroupDropzone" class="group-dropzone">
+        + Drag and drop a tab here to create a new group
+      </div>
 
       <!-- Trash Bin View (Hidden by default) -->
       <div id="trashContainer" class="trash-container hidden">
@@ -61,6 +88,77 @@
           <button id="btnEmptyTrash" class="btn btn-sm btn-danger">Empty Trash</button>
         </div>
         <div id="trashList" class="trash-list"></div>
+      </div>
+
+      <!-- Snapshots Modal Drawer -->
+      <div id="snapshotsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="snapshotsModalTitle">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="snapshotsModalTitle">Rolling Snapshots</h3>
+            <button id="btnSnapshotsModalClose" class="btn btn-sm btn-ghost" aria-label="Close dialog">✕</button>
+          </div>
+          <p style="font-size: var(--type-xs-size); color: var(--color-text-muted); margin-bottom: 12px;">
+            Tab Vault keeps a rolling buffer of your last 5 vault states before major changes. Click "Rollback" to revert to any state.
+          </p>
+          <div id="snapshotsList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;"></div>
+          <div class="modal-actions">
+            <button id="btnCreateManualSnapshot" class="btn btn-sm btn-secondary">Create Snapshot Now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Modal Drawer -->
+      <div id="settingsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="settingsModalTitle">Tab Vault Options & Preferences</h3>
+            <button id="btnSettingsModalClose" class="btn btn-sm btn-ghost" aria-label="Close dialog">✕</button>
+          </div>
+          
+          <div class="settings-group">
+            <label class="settings-label" for="settingRestoreTarget">Restore Window Target</label>
+            <select id="settingRestoreTarget" class="settings-select">
+              <option value="current">Current Window</option>
+              <option value="new">New Window</option>
+            </select>
+          </div>
+
+          <div class="settings-group">
+            <label class="settings-label" for="settingRetentionPolicy">Restore Retention Policy</label>
+            <select id="settingRetentionPolicy" class="settings-select">
+              <option value="remove">Remove tabs from group when restored</option>
+              <option value="keep">Keep tabs in group when restored</option>
+            </select>
+          </div>
+
+          <div class="settings-group">
+            <label class="settings-checkbox-label">
+              <input type="checkbox" id="settingOpenOnStartup">
+              Open Tab Vault dashboard on browser startup
+            </label>
+            <label class="settings-checkbox-label">
+              <input type="checkbox" id="settingDedupOnCapture">
+              Drop duplicate URLs automatically when stashing tabs
+            </label>
+            <label class="settings-checkbox-label">
+              <input type="checkbox" id="settingLazyRestore">
+              Lazy restore (prevent memory spikes when reopening 50+ tabs)
+            </label>
+            <label class="settings-checkbox-label">
+              <input type="checkbox" id="settingCaptureIncognito">
+              Support capturing tabs from incognito windows
+            </label>
+          </div>
+
+          <div class="settings-group">
+            <label class="settings-label">Excluded Domains</label>
+            <div id="excludedDomainsList" style="font-size: var(--type-xs-size); color: var(--color-text-muted);">None</div>
+          </div>
+
+          <div class="modal-actions">
+            <button id="btnSaveSettings" class="btn btn-sm btn-primary">Save Preferences</button>
+          </div>
+        </div>
       </div>
 
       <!-- Import / Export Modal -->

@@ -383,3 +383,38 @@ test('Storage Layer: malformed backup data throws error and preserves existing d
   assert.equal(groups.length, 1);
   assert.equal(groups[0].title, 'Existing Intact Group');
 });
+
+test('Storage Layer: regression - single-tab undo uses saveGroup without creating grp_grp_* prefixes', async () => {
+  const local = new MockStorageArea();
+  const sync = new MockStorageArea();
+  const storage = new TabVaultStorage(local, sync);
+
+  // Initial group with grp_ prefix
+  const group = {
+    id: 'grp_session_123',
+    title: 'Test Session',
+    createdAt: Date.now(),
+    tabs: [
+      { id: 'tab_1', title: 'Example', url: 'https://example.com' }
+    ]
+  };
+
+  await storage.saveGroup(group);
+
+  // Verify key formatted properly
+  const key = formatGroupKey(group.id);
+  assert.equal(key, 'grp_session_123');
+  const dump = local.rawDump();
+  assert.ok(dump[key]);
+  assert.equal(dump['grp_grp_session_123'], undefined);
+
+  // Simulate single-tab delete & undo via saveGroup
+  const restoredGroup = await storage.getGroup('grp_session_123');
+  restoredGroup.tabs.push({ id: 'tab_2', title: 'Second', url: 'https://second.com' });
+  await storage.saveGroup(restoredGroup);
+
+  const dumpAfter = local.rawDump();
+  assert.equal(dumpAfter['grp_grp_session_123'], undefined);
+  assert.equal(dumpAfter['grp_session_123'].tabs.length, 2);
+});
+
