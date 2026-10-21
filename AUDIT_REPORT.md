@@ -20,17 +20,18 @@ This document maintains the chronological, cumulative audit history of the Tab V
 
 ---
 
-## Project Status Scorecard (Reflects Latest Audit: Audit 10 / 2026-10-20)
+## Project Status Scorecard (Reflects Latest Audit: Audit 13 / 2026-10-21)
 
 | Milestone / Gate | Score / Count | Status | Notes |
 | :--- | :--- | :--- | :--- |
 | **Milestone 1, 1.5 & 2 Scope** | Storage, Disaster Recovery & Search | **Complete & Verified** | Storage layer, 3-file rotated auto-backup, key-order resilient atomic write, instant search, and plain-text OneTab import/export. |
-| **Milestone 3 & Gold Master** | Full Parity & Pre-Publish Verification | **Complete & Verified** | 4 subtle runtime bugs resolved (clean restore without trash pollution, incognito filter, clean snapshot rollback, storage init guard); live Chromium DOM verified with 2 groups & 3 quick links. |
-| **Automated Tests** | 50 Passed / 0 Failed | **PASS** | Run via `timeout 120 node --test tests/*.test.js` ([log](file:///replica/audit/logs/10-tests.txt)). |
-| **Chromium Headless E2E** | All Checks Passed | **PASS** | Live DOM verified (`.group-card` = 2, `.quick-link-pill` = 3, `.tab-row` = 7); exact 1280x800 populated promotional screenshots captured ([log](file:///replica/audit/logs/10-screenshots-verify.txt)). |
-| **WCAG Contrast** | 20 Pairs / 0 Failing AA | **PASS** | Light & dark theme tokens verified with `contrast.py` ([log](file:///replica/audit/logs/10-contrast.txt)). |
-| **Parity Score** | 100.0 / 100 | **PASS** | 100% of counted features completed (36 of 36 done) ([log](file:///replica/audit/logs/10-parity.txt)). |
-| **Release Bundle** | `dist/tab-vault-mv3-release.zip` | **READY** | Production 38 KB MV3 release package with verified populated 1280x800 screenshots and complete store listing. |
+| **Milestone 3 & Hardening** | Full Parity & Pre-Publish Hardening | **Complete & Verified** | Authoritative single baseline writer, orphan key self-healing, theme migration, and real-browser E2E suite. |
+| **Settings Fix & Visual Polish** | UI/UX Readability & Design System | **Complete & Verified** | Root cause fix for settings button, 8px grid, comfortable type scale (12–22px), sticky batch toolbar, and dark/light elevation depth. |
+| **Automated Tests** | 59 Passed / 0 Failed | **PASS** | Run via `timeout 120 node --test tests/*.test.js` ([log](file:///replica/audit/logs/13-tests.txt)). |
+| **Chromium Headless E2E** | All Checks Passed (73.7ms benchmark) | **PASS** | Live DOM verified (`.group-card` = 2, `.quick-link-pill` = 3, `.tab-row` = 7); 500-tab stress test passed at 73.7ms ([log](file:///replica/audit/logs/13-e2e.txt)). |
+| **WCAG Contrast** | 20 Pairs / 0 Failing AA | **PASS** | Light & dark theme tokens verified with `contrast.py` ([log](file:///replica/audit/logs/13-contrast.txt)). |
+| **Parity Score** | 100.0 / 100 | **PASS** | 100% of counted features completed (36 of 36 done) ([log](file:///replica/audit/logs/13-parity.txt)). |
+| **Release Bundle** | `dist/tab-vault-mv3-release.zip` | **READY** | Production 41 KB MV3 release package with verified populated 1280x800 screenshots and complete store listing. |
 
 ---
 
@@ -319,4 +320,25 @@ This document maintains the chronological, cumulative audit history of the Tab V
   - **Automated Unit Tests**: `npm test` $\rightarrow$ 56/56 passing, 0 failing.
   - **Production Package**: Rebuilt `dist/tab-vault-mv3-release.zip` (41 KB) containing upgraded icons.
 - **Next Recommended Actions**: Upload `dist/tab-vault-mv3-release.zip`, `dist/promo/*.png`, `dist/screenshots/store-screenshot-*.png`, and copy from `STORE_LISTING.md` to Chrome Web Store Developer Dashboard.
+
+---
+
+### [2026-10-21] Audit 13 — Settings Button Bug Fix & UI/UX Readability & Visual Polish Pass
+- **Task**: Root-cause and fix the settings button unresponsiveness in `tab-vault.html`; execute a comprehensive UI/UX readability and visual polish pass across typography, batch action bar, 8px spacing grid, button hierarchies, elevation depth, and accessible focus states; re-render all promotional graphics in Chromium; re-benchmark 500-tab rendering; and rebuild production ZIP.
+- **Verdict**: `PASS` (59 unit tests passing, Puppeteer E2E suite passing, 73.70ms 500-tab benchmark, 20/20 WCAG AA contrast pairs, 100/100 parity, all 8 CWS assets regenerated).
+- **Audit File**: [`replica/audit/13-ui-fix-and-polish.md`](file:///replica/audit/13-ui-fix-and-polish.md)
+- **Root Cause & Enhancements Delivered**:
+  - **Settings Button Fix**: Restored missing `<div id="excludedDomainsList">` in `tab-vault.html` whose absence caused `populateSettingsForm()` to throw an unhandled `TypeError` on click, terminating the click handler before the drawer could open. Added defensive guard in `tab-vault.js` and automated regression tests in `tests/settings.test.js` and `tests/e2e/dashboard.test.js`.
+  - **Typography & Scale**: Raised base font to comfortable 14px body/tabs, 17px group headers, and 22px dashboard title. Interactive elements never drop below 12px.
+  - **Batch Floating Toolbar**: Upgraded batch action bar into a floating sticky toolbar with strong contrast buttons (`btn-primary` filled accent for Restore Selected, `btn-danger` filled red for Delete Selected, `btn-secondary` outlined for Deselect), 32px+ tap target heights, and subtle elevation shadow.
+  - **Visual System & Micro-Interactions**: Standardized 8px grid, softer border radii (4/6/8px), dual-mode elevation shadows for light/dark themes, 28px comfortable row heights, crisp 16x16 favicons, and high-contrast `:focus-visible` accessibility rings.
+- **Verification Evidence**:
+  - **Automated Unit Tests**: 59 passed, 0 failed, 0 skipped ([`13-tests.txt`](file:///replica/audit/logs/13-tests.txt)).
+  - **Headless Chromium E2E Suite**: Live DOM verified with 0 errors ([`13-e2e.txt`](file:///replica/audit/logs/13-e2e.txt)).
+  - **500-Tab Dashboard Render Benchmark**: **73.70ms** (< 500ms ceiling).
+  - **WCAG Contrast**: 20 pairs checked, 0 failing AA ([`13-contrast.txt`](file:///replica/audit/logs/13-contrast.txt)).
+  - **Parity Score**: 100.0 / 100 (36 counted features, 13/13 must-haves) ([`13-parity.txt`](file:///replica/audit/logs/13-parity.txt)).
+  - **Store Assets**: Re-rendered all 6 screenshots (1280x800) and promo tiles (440x280, 1400x560) using updated UI.
+- **Production Package**: Rebuilt `dist/tab-vault-mv3-release.zip` (41 KB, 23 files).
+- **Next Recommended Actions**: Extension is fully verified, visually polished, and ready for Chrome Web Store upload.
 

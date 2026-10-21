@@ -19,31 +19,31 @@
   --font-mono: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
 
   /* Type Scale */
-  --type-xs-size: 11px;
-  --type-xs-line: 14px;
+  --type-xs-size: 12px;
+  --type-xs-line: 16px;
   --type-xs-weight: 500;
 
-  --type-sm-size: 12px;
-  --type-sm-line: 16px;
-  --type-sm-weight: 400;
+  --type-sm-size: 13px;
+  --type-sm-line: 18px;
+  --type-sm-weight: 500;
 
-  --type-base-size: 13px;
-  --type-base-line: 18px;
+  --type-base-size: 14px;
+  --type-base-line: 20px;
   --type-base-weight: 400;
 
-  --type-md-size: 14px;
-  --type-md-line: 20px;
+  --type-md-size: 15px;
+  --type-md-line: 22px;
   --type-md-weight: 500;
 
-  --type-lg-size: 16px;
-  --type-lg-line: 22px;
+  --type-lg-size: 17px;
+  --type-lg-line: 24px;
   --type-lg-weight: 600;
 
-  --type-xl-size: 20px;
-  --type-xl-line: 26px;
-  --type-xl-weight: 600;
+  --type-xl-size: 22px;
+  --type-xl-line: 28px;
+  --type-xl-weight: 700;
 
-  /* Spacing Scale */
+  /* Spacing Scale (8px grid foundation) */
   --space-0: 0px;
   --space-1: 2px;
   --space-2: 4px;
@@ -56,25 +56,31 @@
   --space-9: 32px;
 
   /* Density Specifics */
-  --density-row-height: 24px;
-  --density-item-gap: 4px;
+  --density-row-height: 28px;
+  --density-item-gap: 6px;
   --density-group-gap: 16px;
-  --density-header-height: 40px;
+  --density-header-height: 48px;
 
   /* Radius */
   --radius-none: 0px;
-  --radius-sm: 3px;
-  --radius-md: 6px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
   --radius-pill: 999px;
 
   /* Shadows */
   --shadow-none: none;
-  --shadow-toast: 0 2px 6px rgba(0, 0, 0, 0.2);
-  --shadow-menu: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-toolbar: 0 8px 24px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.08);
+  --shadow-drawer: 0 16px 36px -4px rgba(0, 0, 0, 0.22), 0 6px 12px -2px rgba(0, 0, 0, 0.12);
+  --shadow-toast: 0 4px 14px rgba(0, 0, 0, 0.18);
+  --shadow-menu: 0 6px 16px rgba(0, 0, 0, 0.14);
 
   /* Transitions */
-  --motion-fast: 100ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  --motion-base: 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-fast: 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-base: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -90,8 +96,13 @@
     --color-danger: #f28b82;
     --color-success: #81c995;
     --color-warning: #fdd663;
-    --shadow-toast: 0 2px 6px rgba(0, 0, 0, 0.6);
-    --shadow-menu: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --shadow-toolbar: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+    --shadow-drawer: 0 16px 36px -4px rgba(0, 0, 0, 0.65), 0 6px 12px -2px rgba(0, 0, 0, 0.4);
+    --shadow-toast: 0 4px 14px rgba(0, 0, 0, 0.6);
+    --shadow-menu: 0 6px 16px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -107,6 +118,11 @@
   --color-danger: #f28b82;
   --color-success: #81c995;
   --color-warning: #fdd663;
-  --shadow-toast: 0 2px 6px rgba(0, 0, 0, 0.6);
-  --shadow-menu: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-toolbar: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-drawer: 0 16px 36px -4px rgba(0, 0, 0, 0.65), 0 6px 12px -2px rgba(0, 0, 0, 0.4);
+  --shadow-toast: 0 4px 14px rgba(0, 0, 0, 0.6);
+  --shadow-menu: 0 6px 16px rgba(0, 0, 0, 0.5);
 }

@@ -899,9 +899,9 @@ function renderGroups(container, groups) {
           <span class="group-count">${tabsCount} ${tabsCount === 1 ? 'tab' : 'tabs'} • ${dateStr}</span>
         </div>
         <div class="group-actions">
-          <button class="btn btn-sm btn-ghost btn-copy-links" title="Copy all URLs in this group" data-id="${group.id}">Copy links</button>
-          <button class="btn btn-sm btn-secondary btn-restore-all" data-id="${group.id}">Restore all</button>
-          <button class="btn btn-sm btn-ghost btn-delete-all" data-id="${group.id}">Delete all</button>
+          <button class="btn btn-sm btn-secondary btn-copy-links" title="Copy all URLs in this group" data-id="${group.id}">Copy links</button>
+          <button class="btn btn-sm btn-primary btn-restore-all" data-id="${group.id}">Restore all</button>
+          <button class="btn btn-sm btn-danger btn-delete-all" data-id="${group.id}">Delete all</button>
         </div>
       </div>
       <div class="group-tabs" data-group-id="${group.id}">

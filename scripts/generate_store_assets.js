@@ -13,11 +13,11 @@ function getBase64(filePath) {
   return `data:image/png;base64,${fs.readFileSync(filePath).toString('base64')}`;
 }
 
-const originalScreenshotsDir = path.resolve('dist/screenshots/original-audit11');
-const lightUI = getBase64(path.join(originalScreenshotsDir, 'tab-vault-light-1280x800.png'));
-const darkUI = getBase64(path.join(originalScreenshotsDir, 'tab-vault-dark-1280x800.png'));
-const settingsUI = getBase64(path.join(originalScreenshotsDir, 'tab-vault-settings-1280x800.png'));
-const snapshotsUI = getBase64(path.join(originalScreenshotsDir, 'tab-vault-snapshots-1280x800.png'));
+const rawScreenshotsDir = path.resolve('dist/screenshots');
+const lightUI = getBase64(path.join(rawScreenshotsDir, 'tab-vault-light-1280x800.png'));
+const darkUI = getBase64(path.join(rawScreenshotsDir, 'tab-vault-dark-1280x800.png'));
+const settingsUI = getBase64(path.join(rawScreenshotsDir, 'tab-vault-settings-1280x800.png'));
+const snapshotsUI = getBase64(path.join(rawScreenshotsDir, 'tab-vault-snapshots-1280x800.png'));
 const logoIcon = getBase64(path.resolve('dist/brand-assets/tab-vault-icon-512.png'));
 
 const commonStyles = `

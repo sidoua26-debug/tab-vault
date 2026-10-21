@@ -1,0 +1,10 @@
+[E2E] 500-tab render benchmark: 73.70ms
+✔ E2E Dashboard & Browser Verification in Real Chromium (4936.976255ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5236.724168
