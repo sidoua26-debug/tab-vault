@@ -61,6 +61,7 @@ done
 - [`/home/sid/.gemini/antigravity/scratch/onetab-mv3/replica/audit/logs/11-parity.txt`](file:///home/sid/.gemini/antigravity/scratch/onetab-mv3/replica/audit/logs/11-parity.txt)
 - [`/home/sid/.gemini/antigravity/scratch/onetab-mv3/replica/audit/logs/11-contrast.txt`](file:///home/sid/.gemini/antigravity/scratch/onetab-mv3/replica/audit/logs/11-contrast.txt)
 - [`/home/sid/.gemini/antigravity/scratch/onetab-mv3/replica/audit/logs/11-e2e.txt`](file:///home/sid/.gemini/antigravity/scratch/onetab-mv3/replica/audit/logs/11-e2e.txt)
+- [`/home/sid/.gemini/antigravity/scratch/onetab-mv3/replica/audit/logs/11-baseline-writer.txt`](file:///home/sid/.gemini/antigravity/scratch/onetab-mv3/replica/audit/logs/11-baseline-writer.txt)
 
 ### Modified:
 - [`/home/sid/.gemini/antigravity/scratch/onetab-mv3/extension/src/storage.js`](file:///home/sid/.gemini/antigravity/scratch/onetab-mv3/extension/src/storage.js)
@@ -96,8 +97,12 @@ done
 
 ## 5. Verification results
 - **Automated Unit Tests**:
-  - Result: **PASS** (56/56 passing tests across 11 test suites, 0 failures, 0 skipped).
-  - New test coverage: `tests/baseline.test.js` (2 tests), orphan key reconciliation in `tests/storage.test.js` (2 tests), theme defaults/migration/immutability in `tests/settings.test.js` (3 tests).
+  - Result: **PASS** (58/58 passing tests across 11 test suites, 0 failures, 0 skipped).
+  - New test coverage: `tests/baseline.test.js` (3 tests including fresh read-merge-write in `updateBackupMetadata`), interleaved non-clobber test in `tests/backup.test.js`, orphan key reconciliation in `tests/storage.test.js` (2 tests), theme defaults/migration/immutability in `tests/settings.test.js` (3 tests).
+- **Storage Architecture Hardening & Single-Writer Invariant**:
+  - `extension/src/baseline.js` is the SOLE authoritative writer for `backup_state.baselineTabCount` (`syncBaselineFromGroups` and `applyBaselineDelta`).
+  - `extension/src/backup.js` no longer writes `baselineTabCount` directly or spreads stale cached `...backupState`. All backup execution metadata updates are routed through `updateBackupMetadata(storageArea, metadata)` via fresh read-merge-write, eliminating the race condition / clobbering of concurrent tab restores during downloads.
+  - Verification grep recorded in [`replica/audit/logs/11-baseline-writer.txt`](file:///home/sid/.gemini/antigravity/scratch/onetab-mv3/replica/audit/logs/11-baseline-writer.txt).
 - **Headless Chromium E2E Verification & Benchmark**:
   - Result: **PASS** in Chromium 155.0.8059.39 snap (`--headless=new`).
   - Service worker target booted cleanly with 0 console errors.

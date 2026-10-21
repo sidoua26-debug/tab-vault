@@ -1,0 +1,3 @@
+extension/src/baseline.js:32:      baselineTabCount: actualTabCount,
+extension/src/baseline.js:68:      baselineTabCount: newBaseline,
+extension/src/backup.js:141:      baselineTabCount: baseline,

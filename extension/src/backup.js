@@ -6,7 +6,7 @@
  */
 
 import { BACKUP_STATE_KEY } from './storage.js';
-import { applyBaselineDelta, syncBaselineFromGroups } from './baseline.js';
+import { applyBaselineDelta, syncBaselineFromGroups, updateBackupMetadata } from './baseline.js';
 
 export const DATA_URL_MAX_LENGTH = 2 * 1024 * 1024; // 2 million characters limit on encoded URL
 export const BACKUP_FILE_PREFIX = 'tab-vault-backup-';
@@ -213,20 +213,14 @@ export async function executeAutoBackup({
       }
     }
 
-    // Update backup_state ONLY after download is confirmed complete
-    const newState = {
-      ...backupState,
+    // Update backup_state ONLY after download is confirmed complete via fresh read-merge-write
+    await updateBackupMetadata(storageArea, {
       currentSlot: nextSlot,
       lastBackupTimestamp: Date.now(),
       lastKnownTabCount: totalTabs,
-      baselineTabCount: totalTabs,
       lastExportMethod: exportMethod,
       lastExportLength: totalEncodedLength,
       lastError: null
-    };
-
-    await storageArea.set({
-      [BACKUP_STATE_KEY]: newState
     });
 
     return {
@@ -240,15 +234,11 @@ export async function executeAutoBackup({
     };
 
   } catch (err) {
-    // On failure: keep state and record lastError
-    const failureState = {
-      ...backupState,
+    // On failure: record lastError via fresh read-merge-write
+    await updateBackupMetadata(storageArea, {
       lastError: err.message,
       lastErrorTimestamp: Date.now()
-    };
-    await storageArea.set({
-      [BACKUP_STATE_KEY]: failureState
-    });
+    }).catch(() => {});
 
     // Cleanup blob url if needed
     if (createdBlobUrl && offscreenHandler) {

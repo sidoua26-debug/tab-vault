@@ -9,8 +9,8 @@ export const TRASH_BIN_KEY = 'trash_bin';
 export const SETTINGS_KEY = 'settings';
 export const BACKUP_STATE_KEY = 'backup_state';
 
-import { syncBaselineFromGroups, applyBaselineDelta, getBaseline } from './baseline.js';
-export { syncBaselineFromGroups, applyBaselineDelta, getBaseline };
+import { syncBaselineFromGroups, applyBaselineDelta, getBaseline, updateBackupMetadata } from './baseline.js';
+export { syncBaselineFromGroups, applyBaselineDelta, getBaseline, updateBackupMetadata };
 
 // In-memory fallback lock for environments without navigator.locks
 class SimpleMutex {

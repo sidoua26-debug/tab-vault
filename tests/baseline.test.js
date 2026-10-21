@@ -4,6 +4,7 @@ import {
   syncBaselineFromGroups,
   applyBaselineDelta,
   getBaseline,
+  updateBackupMetadata,
   BACKUP_STATE_KEY
 } from '../extension/src/baseline.js';
 
@@ -73,3 +74,27 @@ test('Baseline Module: applyBaselineDelta modifies baseline with sanity checks',
     await applyBaselineDelta(storage, 'invalid');
   }, /Invalid baseline delta/);
 });
+
+test('Baseline Module: updateBackupMetadata performs fresh read-merge-write without clobbering existing fields', async () => {
+  const storage = new MockStorage({
+    [BACKUP_STATE_KEY]: {
+      currentSlot: 1,
+      baselineTabCount: 15,
+      lastKnownTabCount: 15
+    }
+  });
+
+  const updated = await updateBackupMetadata(storage, {
+    currentSlot: 2,
+    lastBackupTimestamp: 123456789
+  });
+
+  assert.equal(updated.currentSlot, 2);
+  assert.equal(updated.baselineTabCount, 15, 'baselineTabCount must be preserved');
+  assert.equal(updated.lastKnownTabCount, 15, 'lastKnownTabCount must be preserved');
+  assert.equal(updated.lastBackupTimestamp, 123456789);
+
+  const stateInStore = (await storage.get([BACKUP_STATE_KEY]))[BACKUP_STATE_KEY];
+  assert.deepEqual(stateInStore, updated);
+});
+

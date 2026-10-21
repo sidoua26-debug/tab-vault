@@ -9,7 +9,7 @@ import {
   getBackupFilename,
   DATA_URL_MAX_LENGTH
 } from '../extension/src/backup.js';
-import { TabVaultStorage, adjustBaseline, BACKUP_STATE_KEY } from '../extension/src/storage.js';
+import { TabVaultStorage, adjustBaseline, applyBaselineDelta, BACKUP_STATE_KEY } from '../extension/src/storage.js';
 import { MockStorageArea, MockDownloadsApi } from './test-helpers.js';
 
 test('Backup Module: slot calculation and filename rotation', () => {
@@ -112,8 +112,7 @@ test('Backup Module: In-app removals lower baseline, undo raises baseline, and r
   await storage.saveGroup({ id: 'grp_50', title: '50 Tabs', tabs: tabs50 });
 
   // In-app removal: user restores the 100-tab group (removing it from storage)
-  // Baseline must be lowered by 100!
-  await adjustBaseline(local, -100);
+  // deleteGroup lowers baseline by 100 tabs
   await storage.deleteGroup('grp_100');
 
   // Remaining tabs = 50. Baseline is now 50.
@@ -262,3 +261,50 @@ test('Backup Module: regression - encoded URL length measurement accounts for UR
   assert.equal(result.exportMethod, 'offscreen_document');
   assert.equal(offscreenInvoked, true, 'Offscreen fallback must be chosen when encoded length exceeds limit');
 });
+
+test('Backup Module: interleaved baseline update between shrink guard and post-download write is preserved (no clobber)', async () => {
+  const local = new MockStorageArea({
+    [BACKUP_STATE_KEY]: {
+      currentSlot: 1,
+      baselineTabCount: 10,
+      lastKnownTabCount: 10
+    }
+  });
+  const storage = new TabVaultStorage(local);
+
+  const tabs = Array.from({ length: 10 }, (_, i) => ({
+    id: `t_${i}`,
+    title: `Tab ${i}`,
+    url: `https://example.com/${i}`
+  }));
+  await storage.saveGroup({ id: 'grp_1', title: 'Group 1', tabs });
+
+  // Hook downloads.download to execute an interleaved baseline delta while download is pending
+  const downloads = new MockDownloadsApi();
+  const origDownload = downloads.download.bind(downloads);
+  downloads.download = async (options) => {
+    const id = await origDownload(options);
+    // User or page context restored 3 tabs during the download window
+    await applyBaselineDelta(local, -3);
+    return id;
+  };
+
+  const result = await executeAutoBackup({
+    storage,
+    downloadsApi: downloads
+  });
+
+  assert.equal(result.success, true);
+  assert.equal(result.slot, 2);
+
+  const finalState = local.rawDump()[BACKUP_STATE_KEY];
+  // Backup metadata updated
+  assert.equal(finalState.currentSlot, 2);
+  assert.equal(finalState.lastKnownTabCount, 10);
+  assert.ok(finalState.lastBackupTimestamp > 0);
+  assert.equal(finalState.lastError, null);
+
+  // CRITICAL: baselineTabCount must NOT be clobbered back to 10 by backup write!
+  assert.equal(finalState.baselineTabCount, 7, 'Interleaved baselineTabCount change must be preserved by updateBackupMetadata');
+});
+

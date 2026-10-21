@@ -85,3 +85,29 @@ export async function getBaseline(storageArea) {
   const state = res[BACKUP_STATE_KEY] || {};
   return state.baselineTabCount ?? state.lastKnownTabCount ?? 0;
 }
+
+/**
+ * Atomically updates backup_state metadata with a fresh read-merge-write.
+ * Guarantees that concurrent baseline mutations (e.g. from tab restores or group edits)
+ * are never clobbered by stale caller-cached snapshots.
+ *
+ * @param {Object} storageArea - chrome.storage.local
+ * @param {Object} metadata - Partial backup_state properties to merge
+ * @returns {Promise<Object>} The fresh merged backup_state
+ */
+export async function updateBackupMetadata(storageArea, metadata = {}) {
+  if (!storageArea) throw new Error('Storage area is required');
+  const res = await storageArea.get([BACKUP_STATE_KEY]);
+  const current = res[BACKUP_STATE_KEY] || {};
+
+  const updated = {
+    ...current,
+    ...metadata
+  };
+
+  await storageArea.set({
+    [BACKUP_STATE_KEY]: updated
+  });
+
+  return updated;
+}
