@@ -21,14 +21,14 @@ Browser: Chromium 155.0.8059.39 snap (--headless=new)
 
 4. 500-Tab Dashboard Render Benchmark:
    - Group size: 500 tabs
-   - Render duration: 99.00ms (< 500ms threshold)
+   - Render duration: 68.60ms (< 500ms threshold)
    - Status: PASS
 
 5. Promotional Screenshots Captured (Exact 1280x800):
-   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-light-1280x800.png (89.4 KB)
-   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-dark-1280x800.png (90.9 KB)
-   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-settings-1280x800.png (90.6 KB)
-   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-snapshots-1280x800.png (86.9 KB)
+   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-light-1280x800.png (92.9 KB)
+   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-dark-1280x800.png (94.4 KB)
+   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-settings-1280x800.png (99.9 KB)
+   - /home/sid/.gemini/antigravity/scratch/onetab-mv3/dist/screenshots/tab-vault-snapshots-1280x800.png (89.8 KB)
    - Status: PASS
 ========================================================================
 Verdict: PASS - All E2E assertions, benchmarks, and screenshots verified.

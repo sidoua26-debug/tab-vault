@@ -97,8 +97,8 @@ done
 
 ## 5. Verification results
 - **Automated Unit Tests**:
-  - Result: **PASS** (58/58 passing tests across 11 test suites, 0 failures, 0 skipped).
-  - New test coverage: `tests/baseline.test.js` (3 tests including fresh read-merge-write in `updateBackupMetadata`), interleaved non-clobber test in `tests/backup.test.js`, orphan key reconciliation in `tests/storage.test.js` (2 tests), theme defaults/migration/immutability in `tests/settings.test.js` (3 tests).
+  - Result: **PASS** (59/59 passing tests across 11 test suites, 0 failures, 0 skipped).
+  - New test coverage: `tests/baseline.test.js` (3 tests including fresh read-merge-write in `updateBackupMetadata`), interleaved non-clobber test in `tests/backup.test.js`, orphan key reconciliation in `tests/storage.test.js` (2 tests), theme defaults/migration/immutability and settings drawer verification in `tests/settings.test.js` (4 tests).
 - **Storage Architecture Hardening & Single-Writer Invariant**:
   - `extension/src/baseline.js` is the SOLE authoritative writer for `backup_state.baselineTabCount` (`syncBaselineFromGroups` and `applyBaselineDelta`).
   - `extension/src/backup.js` no longer writes `baselineTabCount` directly or spreads stale cached `...backupState`. All backup execution metadata updates are routed through `updateBackupMetadata(storageArea, metadata)` via fresh read-merge-write, eliminating the race condition / clobbering of concurrent tab restores during downloads.

@@ -696,6 +696,8 @@ async function populateSettingsForm() {
   const domainsContainer = document.getElementById('excludedDomainsList');
   const domainList = Array.isArray(excludedDomains) ? excludedDomains : [];
 
+  if (!domainsContainer) return;
+
   if (domainList.length === 0) {
     domainsContainer.innerHTML = 'None';
   } else {

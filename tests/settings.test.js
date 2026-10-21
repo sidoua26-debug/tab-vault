@@ -91,3 +91,35 @@ test('Settings: migrateThemeSettings preserves explicit theme in vault_settings 
 
   delete globalThis.localStorage;
 });
+
+test('Settings: tab-vault.html has settings button, modal drawer, and all required form inputs', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const htmlPath = path.resolve('extension/tab-vault.html');
+  const html = fs.readFileSync(htmlPath, 'utf8');
+
+  // Verify settings trigger button exists
+  assert.ok(html.includes('id="btnSettings"'), 'Must define #btnSettings button');
+
+  // Verify settings modal drawer exists with modal-overlay hidden
+  assert.ok(/id="settingsModal"\s+class="[^"]*modal-overlay\s+hidden[^"]*"/.test(html) ||
+            /id="settingsModal"\s+class="[^"]*hidden[^"]*"/.test(html),
+            'Must define #settingsModal with hidden class');
+
+  // Verify close button exists
+  assert.ok(html.includes('id="btnSettingsModalClose"'), 'Must define #btnSettingsModalClose');
+
+  // Verify excludedDomainsList exists (prevent null innerHTML crash on populateSettingsForm)
+  assert.ok(html.includes('id="excludedDomainsList"'), 'Must define #excludedDomainsList in settings drawer');
+
+  // Verify form inputs exist
+  assert.ok(html.includes('id="settingRestoreTarget"'), 'Must define #settingRestoreTarget');
+  assert.ok(html.includes('id="settingRetentionPolicy"'), 'Must define #settingRetentionPolicy');
+  assert.ok(html.includes('id="settingOpenOnStartup"'), 'Must define #settingOpenOnStartup');
+  assert.ok(html.includes('id="settingDedupOnCapture"'), 'Must define #settingDedupOnCapture');
+  assert.ok(html.includes('id="settingLazyRestore"'), 'Must define #settingLazyRestore');
+  assert.ok(html.includes('id="settingCaptureIncognito"'), 'Must define #settingCaptureIncognito');
+  assert.ok(html.includes('id="btnRepairStorage"'), 'Must define #btnRepairStorage');
+  assert.ok(html.includes('id="btnSaveSettings"'), 'Must define #btnSaveSettings');
+});
+

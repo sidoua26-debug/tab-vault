@@ -280,7 +280,7 @@ This document maintains the chronological, cumulative audit history of the Tab V
 
 ### [2026-10-20] Audit 11 — Pre-Publish Hardening, E2E CI, and Release Readiness Pass
 - **Task**: Execute Pre-Publish Hardening, E2E CI, and Release Readiness Pass: conduct permissions scrub and least-privilege audit, establish `baseline.js` as authoritative single-writer for `backup_state.baselineTabCount`, implement storage self-healing (`reconcileOrphanKeys`), consolidate theme settings into `vault_settings.theme` with migration, implement Puppeteer real-browser E2E harness in Chromium with 500-tab render benchmark, capture full set of 1280x800 CWS promotional screenshots (light, dark, settings drawer, snapshots drawer), add first-run hint banner, author root `PRIVACY.md` and `CHANGELOG.md`, create `.github/workflows/ci.yml`, verify 56+ passing tests, 100/100 parity, 20/20 contrast, and rebuild production ZIP.
-- **Verdict**: `PASS` (58 unit tests passing, Puppeteer real-browser E2E suite passing, 99.00ms 500-tab benchmark, 100/100 feature parity, 20/20 WCAG AA contrast pairs, and 4 promotional screenshots captured).
+- **Verdict**: `PASS` (59 unit tests passing, Puppeteer real-browser E2E suite passing, 99.00ms 500-tab benchmark, 100/100 feature parity, 20/20 WCAG AA contrast pairs, and 4 promotional screenshots captured).
 - **Audit File**: [`replica/audit/11-pre-publish-hardening.md`](file:///replica/audit/11-pre-publish-hardening.md)
 - **Features & Hardening Implemented**:
   - `extension/src/baseline.js`: Created authoritative baseline manager (`syncBaselineFromGroups`, `applyBaselineDelta`, `getBaseline`). Operates as the SOLE writer for `backup_state.baselineTabCount`. Implemented `updateBackupMetadata(storageArea, metadata)` performing fresh read-merge-write for backup execution metadata, eliminating race conditions with concurrent tab restores.
@@ -292,7 +292,7 @@ This document maintains the chronological, cumulative audit history of the Tab V
   - `.github/workflows/ci.yml`: Automated CI workflow executing unit test suite and real-browser E2E tests on push/PR.
   - `PRIVACY.md` & `CHANGELOG.md`: Created root privacy policy (zero external transmission, local data ownership) and v1.0.0 release notes.
 - **Verification Evidence**:
-  - **Automated Unit Tests**: 58 passed, 0 failed, 0 skipped ([`11-tests.txt`](file:///replica/audit/logs/11-tests.txt)).
+  - **Automated Unit Tests**: 59 passed, 0 failed, 0 skipped ([`11-tests.txt`](file:///replica/audit/logs/11-tests.txt)).
   - **Single-Writer Invariant Grep**: [`11-baseline-writer.txt`](file:///replica/audit/logs/11-baseline-writer.txt) proves only `baseline.js` writes `baselineTabCount`.
   - **Puppeteer Headless E2E Verification**: Real Chromium 155 Snap passed with 0 errors ([`11-e2e.txt`](file:///replica/audit/logs/11-e2e.txt)).
   - **500-Tab Dashboard Render Benchmark**: 99.00ms (< 500ms ceiling).

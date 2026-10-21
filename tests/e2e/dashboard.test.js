@@ -208,14 +208,23 @@ test('E2E Dashboard & Browser Verification in Real Chromium', async (t) => {
     await page.screenshot({ path: darkPath, type: 'png' });
     assert.ok(fs.existsSync(darkPath), 'Dark theme screenshot must exist');
 
-    // 5c. Settings Drawer screenshot
+    // 5c. Settings Drawer verification & screenshot
+    const isHiddenBefore = await page.$eval('#settingsModal', (el) => el.classList.contains('hidden'));
+    assert.equal(isHiddenBefore, true, 'Settings modal must initially be hidden');
+
     await page.click('#btnSettings');
-    await new Promise((r) => setTimeout(r, 250));
+    await page.waitForFunction(() => !document.getElementById('settingsModal').classList.contains('hidden'), { timeout: 3000 });
+    const isHiddenAfterOpen = await page.$eval('#settingsModal', (el) => el.classList.contains('hidden'));
+    assert.equal(isHiddenAfterOpen, false, 'Settings modal must become visible after clicking #btnSettings');
+
     const settingsPath = path.join(screenshotsDir, 'tab-vault-settings-1280x800.png');
     await page.screenshot({ path: settingsPath, type: 'png' });
     assert.ok(fs.existsSync(settingsPath), 'Settings screenshot must exist');
-    await page.$eval('#btnSettingsModalClose', (btn) => btn.click());
-    await new Promise((r) => setTimeout(r, 150));
+
+    await page.click('#btnSettingsModalClose');
+    await page.waitForFunction(() => document.getElementById('settingsModal').classList.contains('hidden'), { timeout: 3000 });
+    const isHiddenAfterClose = await page.$eval('#settingsModal', (el) => el.classList.contains('hidden'));
+    assert.equal(isHiddenAfterClose, true, 'Settings modal must be hidden after clicking close');
 
     // 5d. Snapshots Drawer screenshot
     await page.click('#btnSnapshots');
